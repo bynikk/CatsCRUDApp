@@ -1,4 +1,4 @@
-using DAL;
+using DAL.EF;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<AppDbContext>(
-        options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=CatsCRUDAppDb;Trusted_Connection=True;MultipleActiveResultSets=true;"));
+builder.Services.AddDbContext<ShelterDbContext>(
+        options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=ServicesProviderDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
 
 builder.Services.AddEndpointsApiExplorer();
 

@@ -1,5 +1,9 @@
-﻿using BLL.Entities;
-using DAL;
+﻿using AutoMapper;
+using BLL.DTO;
+using BLL.Interfaces;
+using CatsCRUDApp.Models;
+using DAL.EF;
+using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -8,50 +12,50 @@ namespace CatsCRUDApp.Controllers
     [ApiController]
     public class CatController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
-        public CatController(AppDbContext dbContext)
+        ICatService catService;
+
+        public CatController(ICatService serv)
         {
-            _dbContext = dbContext;
+            catService = serv;
         }
 
         // GET api/Cat
         [HttpGet]
         public ActionResult Get()
         {
-            return Ok(_dbContext.Cats);
+            return Ok(catService.GetCats());
         }
 
         // POST api/Cat
         [HttpPost]
-        public ActionResult Post(Cat model)
+        public ActionResult Post(CatViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            _dbContext.Cats.Add(model);
-            _dbContext.SaveChanges();
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
+            CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
+
+            CatDTO existingCat = catService.GetCat(catDto.Id);
+            if (existingCat != null)
+            {
+                catService.CreateCat(catDto);
+            }
+            else
+            {
+                return NotFound();
+            }
 
             return Ok("Add successfully");
         }
 
         // Put api/Cat
         [HttpPut]
-        public ActionResult Put(Cat model)
+        public ActionResult Put(CatViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-
-
-            var existingStudent = _dbContext.Cats.Where(s => s.Id == model.Id).FirstOrDefault();
-
-            if (existingStudent != null)
-            {
-                existingStudent.Name = model.Name;
-
-                _dbContext.SaveChanges();
-            }
-            else
-            {
-                return NotFound();
-            }
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
+            CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
+            catService.UpdateCat(catDto);
 
             return Ok($"Object by {model.Id} id was updated successfully");
         }
@@ -62,12 +66,17 @@ namespace CatsCRUDApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var existingStudent = _dbContext.Cats.Where(x => x.Id == id).FirstOrDefault();
-            
-            if (Equals(existingStudent, null)) return NotFound();
+            CatDTO existingCat = catService.GetCat(id);
+            if (Equals(existingCat, null)) return NotFound();
 
-            _dbContext.Cats.Remove(existingStudent);
-            _dbContext.SaveChanges();
+            if (existingCat != null)
+            {
+                catService.DeleteCat(existingCat.Id);
+            }
+            else
+            {
+                return NotFound();
+            }
 
             return Ok($"Object by {id} id  was removed successfully");
         }
