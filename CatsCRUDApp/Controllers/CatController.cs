@@ -2,8 +2,6 @@
 using BLL.DTO;
 using BLL.Interfaces;
 using CatsCRUDApp.Models;
-using DAL.EF;
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -35,15 +33,7 @@ namespace CatsCRUDApp.Controllers
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
             CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
 
-            CatDTO existingCat = catService.GetCat(catDto.Id);
-            if (existingCat != null)
-            {
-                catService.CreateCat(catDto);
-            }
-            else
-            {
-                return NotFound();
-            }
+            catService.CreateCat(catDto);
 
             return Ok("Add successfully");
         }
@@ -53,8 +43,10 @@ namespace CatsCRUDApp.Controllers
         public ActionResult Put(CatViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
             CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
+
             catService.UpdateCat(catDto);
 
             return Ok($"Object by {model.Id} id was updated successfully");
@@ -62,7 +54,7 @@ namespace CatsCRUDApp.Controllers
 
         // DELETE api/Cat
         [HttpDelete]
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(int id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

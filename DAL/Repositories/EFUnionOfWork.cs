@@ -7,13 +7,12 @@ namespace DAL.Repositories
 {
     public class EFUnitOfWork : IUnitOfWork
     {
-        private ShelterDbContext db;
+        private CatDbContext db;
         private CatRepository catRepository;
-        private OrderRepository orderRepository;
 
-        public EFUnitOfWork(DbContextOptions<ShelterDbContext> options)
+        public EFUnitOfWork(DbContextOptions<CatDbContext> options)
         {
-            db = new ShelterDbContext(options);
+            db = new CatDbContext(options);
         }
         public IRepository<Cat> Cats
         {
@@ -22,16 +21,6 @@ namespace DAL.Repositories
                 if (catRepository == null)
                     catRepository = new CatRepository(db);
                 return catRepository;
-            }
-        }
-
-        public IRepository<Order> Orders
-        {
-            get
-            {
-                if (orderRepository == null)
-                    orderRepository = new OrderRepository(db);
-                return orderRepository;
             }
         }
 

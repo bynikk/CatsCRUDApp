@@ -1,18 +1,30 @@
+using BLL.Interfaces;
+using BLL.Services;
 using DAL.EF;
+using DAL.Entities;
+using DAL.Interfaces;
+using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddTransient<ICatService, CatService>();
+builder.Services.AddTransient<IRepository<Cat>, CatRepository>();
+builder.Services.AddTransient<IUnitOfWork, EFUnitOfWork>();
+
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<ShelterDbContext>(
-        options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=ServicesProviderDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+builder.Services.AddDbContext<CatDbContext>(options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=CatsCRUDAppDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+
+
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddMvc();
 
 var app = builder.Build();
 

@@ -7,58 +7,47 @@ using DAL.Interfaces;
 
 namespace BLL.Services
 {
-    internal class CatService : ICatService
+    public class CatService : ICatService
     {
-        IUnitOfWork db { get; set; }
+        IRepository<Cat> rep { get; set; }
 
-        public CatService(IUnitOfWork uow)
+        public CatService(IRepository<Cat> rep)
         {
-            db = uow;
+            this.rep = rep;
         }
 
-        public void Dispose()
-        {
-            db.Dispose();
-        }
         public void CreateCat(CatDTO catDto)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
-            db.Cats.Create(cat);
-            db.Save();
+
+            rep.Create(cat);
         }
 
-        public CatDTO GetCat(int? id)
+        public CatDTO GetCat(int id)
         {
-            if (id == null)
-                throw new ValidationException("Cat ID not set", "");
-            var cat = db.Cats.Get(id.Value);
-            if (cat == null)
-                throw new ValidationException("Cat not set", "");
+            var cat = rep.Get(id);
 
-            return new CatDTO { Id = cat.Id, Name = cat.Name, Price = cat.Price };
+            return new CatDTO { Id = cat.Id, Name = cat.Name };
         }
 
         public IEnumerable<CatDTO> GetCats()
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, List<CatDTO>>(db.Cats.GetAll());
+            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(rep.GetAll());
         }
 
         public void UpdateCat(CatDTO catDto)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
-            db.Cats.Update(cat);
-            db.Save();
+
+            rep.Update(cat);
         }
 
         public void DeleteCat(int id)
         {
-            if (id == null)
-                throw new ValidationException("Cat ID not set", "");
-            db.Cats.Delete(id);
-            db.Save();
+            rep.Delete(id);
         }
     }
 }
