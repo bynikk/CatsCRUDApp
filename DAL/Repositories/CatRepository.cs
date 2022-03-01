@@ -13,13 +13,13 @@ namespace DAL.Repositories
         {
             this.db = context;
         }
-        public async Task CreateAsync(Cat item)
+        public async Task Create(Cat item)
         {
             await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now });
             await Task.Run(() => db.SaveChangesAsync());
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task Delete(int id)
         {
             var cat = await db.Cats.FirstOrDefaultAsync(x => x.Id == id);
             if (cat != null)
@@ -29,22 +29,22 @@ namespace DAL.Repositories
             }
         }
 
-        public IEnumerable<Cat> FindAsync(Func<Cat, bool> predicate)
+        public async Task<IEnumerable<Cat>> Find(Func<Cat, bool> predicate)
         {
-            return Task.Run(() => db.Cats.Where(predicate)).GetAwaiter().GetResult();
+            return db.Cats.Where(predicate);
         }
 
-        public async Task<Cat?> GetAsync(int id)
+        public async Task<Cat?> Get(int id)
         {
             return await Task.Run(() => db.Cats.FirstOrDefaultAsync(x => x.Id == id));
         }
 
-        public IEnumerable<Cat> GetAllAsync()
+        public async Task<IEnumerable<Cat>> GetAll()
         {
-            return Task.Run(() => db.Cats).GetAwaiter().GetResult();
+            return db.Cats;
         }
 
-        public async Task UpdateAsync(Cat item)
+        public async Task Update(Cat item)
         {
             var cat = await db.Cats.FirstOrDefaultAsync(p => p.Id == item.Id);
 

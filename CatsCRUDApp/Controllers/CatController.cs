@@ -19,51 +19,51 @@ namespace CatsCRUDApp.Controllers
 
         // GET api/Cat
         [HttpGet]
-        public ActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            return Ok(catService.GetCats());
+            return Ok(await catService.GetCats());
         }
 
         // POST api/Cat
         [HttpPost]
-        public ActionResult Post(CatViewModel model)
+        public async Task<IActionResult> Post(CatViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
             CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
 
-            catService.CreateCat(catDto);
+            await catService.CreateCat(catDto);
 
             return Ok("Add successfully");
         }
 
         // Put api/Cat
         [HttpPut]
-        public ActionResult Put(CatViewModel model)
+        public async Task<IActionResult> Put(CatViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
             CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
 
-            catService.UpdateCat(catDto);
+            await catService.UpdateCat(catDto);
 
             return Ok($"Object by {model.Id} id was updated successfully");
         }
 
         // DELETE api/Cat
         [HttpDelete]
-        public ActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            CatDTO existingCat = catService.GetCat(id);
+            CatDTO existingCat = await catService.GetCat(id);
             if (Equals(existingCat, null)) return NotFound();
 
             if (existingCat != null)
             {
-                catService.DeleteCat(existingCat.Id);
+                await catService.DeleteCat(existingCat.Id);
             }
             else
             {

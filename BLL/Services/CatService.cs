@@ -9,24 +9,24 @@ namespace BLL.Services
 {
     public class CatService : ICatService
     {
-        IRepository<Cat> rep { get; set; }
+        IRepository<Cat> catRepository { get; set; }
 
         public CatService(IRepository<Cat> rep)
         {
-            this.rep = rep;
+            this.catRepository = rep;
         }
 
-        public void CreateCat(CatDTO catDto)
+        public async Task CreateCat(CatDTO catDto)
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
 
-            rep.CreateAsync(cat).GetAwaiter().GetResult();
+            await catRepository.Create(cat);
         }
 
-        public CatDTO GetCat(int id)
+        public async Task<CatDTO> GetCat(int id)
         {
-            Cat cat = rep.GetAsync(id).GetAwaiter().GetResult();
+            Cat cat = await catRepository.Get(id);
 
             if (cat == null)
                 throw new ValidationException("No cat in context with this id", "");
@@ -34,24 +34,23 @@ namespace BLL.Services
             return new CatDTO { Id = cat.Id, Name = cat.Name };
         }
 
-        public IEnumerable<CatDTO> GetCats()
+        public async Task<IEnumerable<CatDTO>> GetCats()
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(
-                rep.GetAllAsync());
+            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(await catRepository.GetAll());
         }
 
-        public void UpdateCat(CatDTO catDto)
+        public async Task UpdateCat(CatDTO catDto)
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
 
-            rep.UpdateAsync(cat).GetAwaiter().GetResult();
+            await catRepository.Update(cat);
         }
 
-        public void DeleteCat(int id)
+        public async Task DeleteCat(int id)
         {
-            rep.DeleteAsync(id).GetAwaiter().GetResult();
+            await catRepository.Delete(id);
         }
     }
 }

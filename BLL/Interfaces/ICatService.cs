@@ -4,10 +4,10 @@ namespace BLL.Interfaces
 {
     public interface ICatService
     {
-        void CreateCat(CatDTO catDto);
-        CatDTO GetCat(int id);
-        void UpdateCat(CatDTO catDto);
-        void DeleteCat(int id);
-        IEnumerable<CatDTO> GetCats();
+        Task<CatDTO> GetCat(int id);
+        Task CreateCat(CatDTO catDto);
+        Task UpdateCat(CatDTO catDto);
+        Task DeleteCat(int id);
+        Task<IEnumerable<CatDTO>> GetCats();
     }
 }
