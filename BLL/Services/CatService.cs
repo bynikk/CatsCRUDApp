@@ -21,12 +21,15 @@ namespace BLL.Services
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
 
-            rep.Create(cat);
+            rep.CreateAsync(cat).GetAwaiter().GetResult();
         }
 
         public CatDTO GetCat(int id)
         {
-            var cat = rep.Get(id);
+            Cat cat = rep.GetAsync(id).GetAwaiter().GetResult();
+
+            if (cat == null)
+                throw new ValidationException("No cat in context with this id", "");
 
             return new CatDTO { Id = cat.Id, Name = cat.Name };
         }
@@ -34,7 +37,8 @@ namespace BLL.Services
         public IEnumerable<CatDTO> GetCats()
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(rep.GetAll());
+            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(
+                rep.GetAllAsync());
         }
 
         public void UpdateCat(CatDTO catDto)
@@ -42,12 +46,12 @@ namespace BLL.Services
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
             Cat cat = mapper.Map<CatDTO, Cat>(catDto);
 
-            rep.Update(cat);
+            rep.UpdateAsync(cat).GetAwaiter().GetResult();
         }
 
         public void DeleteCat(int id)
         {
-            rep.Delete(id);
+            rep.DeleteAsync(id).GetAwaiter().GetResult();
         }
     }
 }

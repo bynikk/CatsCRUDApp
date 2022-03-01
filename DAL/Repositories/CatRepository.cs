@@ -13,45 +13,45 @@ namespace DAL.Repositories
         {
             this.db = context;
         }
-        public void Create(Cat item)
+        public async Task CreateAsync(Cat item)
         {
-            db.Cats.Add(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now});
-            db.SaveChanges();
+            await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now });
+            await Task.Run(() => db.SaveChangesAsync());
         }
 
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            Cat cat = db.Cats.FirstOrDefault(x => x.Id == id);
+            var cat = await db.Cats.FirstOrDefaultAsync(x => x.Id == id);
             if (cat != null)
             {
                 db.Cats.Remove(cat);
-                db.SaveChanges();
+                await Task.Run(() => db.SaveChangesAsync());
             }
         }
 
-        public IEnumerable<Cat> Find(Func<Cat, bool> predicate)
+        public IEnumerable<Cat> FindAsync(Func<Cat, bool> predicate)
         {
-            return db.Cats.Where(predicate).ToList();
+            return Task.Run(() => db.Cats.Where(predicate)).GetAwaiter().GetResult();
         }
 
-        public Cat? Get(int id)
+        public async Task<Cat?> GetAsync(int id)
         {
-            return db.Cats.FirstOrDefault(x => x.Id == id);
+            return await Task.Run(() => db.Cats.FirstOrDefaultAsync(x => x.Id == id));
         }
 
-        public IEnumerable<Cat> GetAll()
+        public IEnumerable<Cat> GetAllAsync()
         {
-            return db.Cats;
+            return Task.Run(() => db.Cats).GetAwaiter().GetResult();
         }
 
-        public void Update(Cat item)
+        public async Task UpdateAsync(Cat item)
         {
-            Cat cat = db.Cats.FirstOrDefault(p => p.Id == item.Id);
+            var cat = await db.Cats.FirstOrDefaultAsync(p => p.Id == item.Id);
 
             cat.Id = item.Id;
             cat.Name = item.Name;
 
-            db.SaveChanges();
+            await Task.Run(() => db.SaveChangesAsync());
         }
     }
 }

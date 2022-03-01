@@ -2,11 +2,11 @@
 {
     public interface IRepository<T> where T : class
     {
-        IEnumerable<T> GetAll();
-        T Get(int id);
-        IEnumerable<T> Find(Func<T, Boolean> predicate);
-        void Create(T item);
-        void Update(T item);
-        void Delete(int id);
+        IEnumerable<T> GetAllAsync();
+        Task<T> GetAsync(int id);
+        IEnumerable<T> FindAsync(Func<T, Boolean> predicate);
+        Task CreateAsync(T item);
+        Task UpdateAsync(T item);
+        Task DeleteAsync(int id);
     }
 }
