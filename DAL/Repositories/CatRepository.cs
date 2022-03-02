@@ -1,6 +1,6 @@
-﻿using DAL.EF;
-using DAL.Entities;
-using DAL.Interfaces;
+﻿using BLL.Entities;
+using BLL.Interfaces;
+using DAL.EF;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
@@ -11,47 +11,37 @@ namespace DAL.Repositories
 
         public CatRepository(CatDbContext context)
         {
-            this.db = context;
+            db = context;
         }
-        public void Create(Cat item)
+        public async Task Create(Cat item)
         {
-            db.Cats.Add(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now});
-            db.SaveChanges();
+            await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now });
+            await Task.Run(() => db.SaveChangesAsync());
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
-            Cat cat = db.Cats.FirstOrDefault(x => x.Id == id);
+            var cat = await db.Cats.FirstOrDefaultAsync(x => x.Id == id);
             if (cat != null)
             {
                 db.Cats.Remove(cat);
-                db.SaveChanges();
+                await Task.Run(() => db.SaveChangesAsync());
             }
         }
 
-        public IEnumerable<Cat> Find(Func<Cat, bool> predicate)
-        {
-            return db.Cats.Where(predicate).ToList();
-        }
-
-        public Cat? Get(int id)
-        {
-            return db.Cats.FirstOrDefault(x => x.Id == id);
-        }
-
-        public IEnumerable<Cat> GetAll()
+        public async Task<IEnumerable<Cat>> GetAll()
         {
             return db.Cats;
         }
 
-        public void Update(Cat item)
+        public async Task Update(Cat item)
         {
-            Cat cat = db.Cats.FirstOrDefault(p => p.Id == item.Id);
+            var cat = await db.Cats.FirstOrDefaultAsync(p => p.Id == item.Id);
 
             cat.Id = item.Id;
             cat.Name = item.Name;
 
-            db.SaveChanges();
+            await Task.Run(() => db.SaveChangesAsync());
         }
     }
 }

@@ -1,53 +1,49 @@
-﻿using AutoMapper;
-using BLL.DTO;
-using BLL.Infrastructure;
+﻿using BLL.Entities;
 using BLL.Interfaces;
-using DAL.Entities;
-using DAL.Interfaces;
 
 namespace BLL.Services
 {
     public class CatService : ICatService
     {
-        IRepository<Cat> rep { get; set; }
+        IRepository<Cat> catRepository { get; set; }
+        IFinder<Cat> catFinder { get; set; }
 
-        public CatService(IRepository<Cat> rep)
+        public CatService(IRepository<Cat> rep, IFinder<Cat> finder)
         {
-            this.rep = rep;
+            catRepository = rep;
+            catFinder = finder;
         }
 
-        public void CreateCat(CatDTO catDto)
+        public async Task CreateCat(Cat cat)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatDTO, Cat>(catDto);
-
-            rep.Create(cat);
+            await catRepository.Create(cat);
         }
 
-        public CatDTO GetCat(int id)
+        public async Task<IEnumerable<Cat>> GetCats()
         {
-            var cat = rep.Get(id);
-
-            return new CatDTO { Id = cat.Id, Name = cat.Name };
+            
+            return await catRepository.GetAll();
         }
 
-        public IEnumerable<CatDTO> GetCats()
+        public async Task UpdateCat(Cat cat)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(rep.GetAll());
+            await catRepository.Update(cat);
         }
 
-        public void UpdateCat(CatDTO catDto)
+        public async Task DeleteCat(int id)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatDTO, Cat>(catDto);
-
-            rep.Update(cat);
+            await catRepository.Delete(id);
         }
 
-        public void DeleteCat(int id)
+        public async Task<IEnumerable<Cat>> FindCats(Func<Cat, Boolean> predicate)
         {
-            rep.Delete(id);
+            return await catFinder.Find(predicate);
+        }
+        public async Task<Cat> GetCatById(int id)
+        {
+            var cat = await catFinder.GetById(id);
+
+            return new Cat { Id = cat.Id, Name = cat.Name };
         }
     }
 }

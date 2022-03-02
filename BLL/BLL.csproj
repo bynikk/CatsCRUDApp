@@ -17,8 +17,4 @@
     <PackageReference Include="Ninject.Extensions.Xml" Version="3.3.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\DAL\DAL.csproj" />
-  </ItemGroup>
-
 </Project>

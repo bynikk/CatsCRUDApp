@@ -1,4 +1,4 @@
-﻿using DAL.Entities;
+﻿using BLL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.EF

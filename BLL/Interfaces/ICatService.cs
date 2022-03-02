@@ -1,13 +1,14 @@
-﻿using BLL.DTO;
+﻿using BLL.Entities;
 
 namespace BLL.Interfaces
 {
     public interface ICatService
     {
-        void CreateCat(CatDTO catDto);
-        CatDTO GetCat(int id);
-        void UpdateCat(CatDTO catDto);
-        void DeleteCat(int id);
-        IEnumerable<CatDTO> GetCats();
+        Task CreateCat(Cat catDto);
+        Task UpdateCat(Cat catDto);
+        Task DeleteCat(int id);
+        Task<IEnumerable<Cat>> GetCats();
+        Task<IEnumerable<Cat>> FindCats(Func<Cat, Boolean> predicate);
+        Task<Cat> GetCatById(int id);
     }
 }
