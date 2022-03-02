@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BLL.Interfaces;
-using BLL.Models;
+using CatsCRUDApp.Models;
+using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -20,14 +21,22 @@ namespace CatsCRUDApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await catService.GetCats());
+            var cats = await catService.GetCats();
+
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
+            var catsViewModel = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
+
+            return Ok(catsViewModel);
         }
 
         // POST api/Cat
         [HttpPost]
         public async Task<IActionResult> Post(CatViewModel model)
         {
-            await catService.CreateCat(model);
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
+            var cat = mapper.Map<CatViewModel, Cat>(model);
+
+            await catService.CreateCat(cat);
 
             return Ok("Add successfully");
         }
@@ -36,7 +45,10 @@ namespace CatsCRUDApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(CatViewModel model)
         {
-            await catService.UpdateCat(model);
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
+            var cat = mapper.Map<CatViewModel, Cat>(model);
+
+            await catService.UpdateCat(cat);
 
             return Ok($"Object by {model.Id} id was updated successfully");
         }

@@ -1,13 +1,13 @@
-﻿using BLL.Models;
+﻿using DAL.Entities;
 
 namespace BLL.Interfaces
 {
     public interface ICatService
     {
-        Task<CatViewModel> GetCat(int id);
-        Task CreateCat(CatViewModel catDto);
-        Task UpdateCat(CatViewModel catDto);
+        Task<Cat> GetCat(int id);
+        Task CreateCat(Cat catDto);
+        Task UpdateCat(Cat catDto);
         Task DeleteCat(int id);
-        Task<IEnumerable<CatViewModel>> GetCats();
+        Task<IEnumerable<Cat>> GetCats();
     }
 }

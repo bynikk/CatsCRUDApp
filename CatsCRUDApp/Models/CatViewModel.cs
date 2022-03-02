@@ -1,4 +1,4 @@
-﻿namespace BLL.Models
+﻿namespace CatsCRUDApp.Models
 {
     public class CatViewModel
     {

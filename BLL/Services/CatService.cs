@@ -1,7 +1,4 @@
-﻿using AutoMapper;
-using BLL.Infrastructure;
-using BLL.Interfaces;
-using BLL.Models;
+﻿using BLL.Interfaces;
 using DAL.Entities;
 using DAL.Interfaces;
 
@@ -16,32 +13,26 @@ namespace BLL.Services
             this.catRepository = rep;
         }
 
-        public async Task CreateCat(CatViewModel catDto)
+        public async Task CreateCat(Cat cat)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatViewModel, Cat>(catDto);
-
             await catRepository.Create(cat);
         }
 
-        public async Task<CatViewModel> GetCat(int id)
+        public async Task<Cat> GetCat(int id)
         {
             Cat cat = await catRepository.Get(id);
 
-            return new CatViewModel { Id = cat.Id, Name = cat.Name };
+            return new Cat { Id = cat.Id, Name = cat.Name };
         }
 
-        public async Task<IEnumerable<CatViewModel>> GetCats()
+        public async Task<IEnumerable<Cat>> GetCats()
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(await catRepository.GetAll());
+            
+            return await catRepository.GetAll();
         }
 
-        public async Task UpdateCat(CatViewModel catDto)
+        public async Task UpdateCat(Cat cat)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatViewModel, Cat>(catDto);
-
             await catRepository.Update(cat);
         }
 
