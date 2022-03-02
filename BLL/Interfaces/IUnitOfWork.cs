@@ -2,9 +2,8 @@
 
 namespace BLL.Interfaces
 {
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork
     {
-        IRepository<Cat> Cats { get; }
-        void Save();
+        Task<int> Save();
     }
 }

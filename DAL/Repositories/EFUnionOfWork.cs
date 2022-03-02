@@ -9,45 +9,15 @@ namespace DAL.Repositories
     public class EFUnitOfWork : IUnitOfWork
     {
         private CatDbContext db;
-        private CatRepository catRepository;
 
-        public EFUnitOfWork(DbContextOptions<CatDbContext> options)
+        public EFUnitOfWork(CatDbContext context)
         {
-            db = new CatDbContext(options);
-        }
-        public IRepository<Cat> Cats
-        {
-            get
-            {
-                if (catRepository == null)
-                    catRepository = new CatRepository(db);
-                return catRepository;
-            }
+            db = context;
         }
 
-        public void Save()
+        public Task<int> Save()
         {
-            db.SaveChanges();
-        }
-
-        private bool disposed = false;
-
-        public virtual void Dispose(bool disposing)
-        {
-            if (!this.disposed)
-            {
-                if (disposing)
-                {
-                    db.Dispose();
-                }
-                this.disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            return db.SaveChangesAsync();
         }
     }
 }

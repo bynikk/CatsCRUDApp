@@ -7,43 +7,41 @@ namespace BLL.Services
     {
         IRepository<Cat> catRepository { get; set; }
         IFinder<Cat> catFinder { get; set; }
+        IUnitOfWork unitOfWork { get; set; }
 
-        public CatService(IRepository<Cat> rep, IFinder<Cat> finder)
+        public CatService(IRepository<Cat> rep, IFinder<Cat> finder, IUnitOfWork uow)
         {
             catRepository = rep;
             catFinder = finder;
+            unitOfWork = uow;
         }
 
-        public async Task CreateCat(Cat cat)
+        public async Task Create(Cat cat)
         {
             await catRepository.Create(cat);
+            await unitOfWork.Save();
         }
 
-        public async Task<IEnumerable<Cat>> GetCats()
+        public async Task<IEnumerable<Cat>> Get()
         {
-            
             return await catRepository.GetAll();
         }
 
-        public async Task UpdateCat(Cat cat)
+        public async Task Update(Cat cat)
         {
             await catRepository.Update(cat);
+            await unitOfWork.Save();
         }
 
-        public async Task DeleteCat(int id)
+        public async Task Delete(int id)
         {
             await catRepository.Delete(id);
+            await unitOfWork.Save();
         }
 
-        public async Task<IEnumerable<Cat>> FindCats(Func<Cat, Boolean> predicate)
-        {
-            return await catFinder.Find(predicate);
-        }
         public async Task<Cat> GetCatById(int id)
         {
-            var cat = await catFinder.GetById(id);
-
-            return new Cat { Id = cat.Id, Name = cat.Name };
+            return await catFinder.GetById(id);
         }
     }
 }
