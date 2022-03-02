@@ -1,4 +1,4 @@
-﻿namespace DAL.Entities
+﻿namespace BLL.Entities
 {
     public class Cat
     {

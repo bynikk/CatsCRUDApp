@@ -1,6 +1,6 @@
-﻿using DAL.Entities;
+﻿using BLL.Entities;
 
-namespace DAL.Interfaces
+namespace BLL.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {

@@ -1,28 +1,22 @@
-﻿using BLL.Interfaces;
-using DAL.Entities;
-using DAL.Interfaces;
+﻿using BLL.Entities;
+using BLL.Interfaces;
 
 namespace BLL.Services
 {
     public class CatService : ICatService
     {
         IRepository<Cat> catRepository { get; set; }
+        IFinder<Cat> catFinder { get; set; }
 
-        public CatService(IRepository<Cat> rep)
+        public CatService(IRepository<Cat> rep, IFinder<Cat> finder)
         {
-            this.catRepository = rep;
+            catRepository = rep;
+            catFinder = finder;
         }
 
         public async Task CreateCat(Cat cat)
         {
             await catRepository.Create(cat);
-        }
-
-        public async Task<Cat> GetCat(int id)
-        {
-            Cat cat = await catRepository.Get(id);
-
-            return new Cat { Id = cat.Id, Name = cat.Name };
         }
 
         public async Task<IEnumerable<Cat>> GetCats()
@@ -39,6 +33,17 @@ namespace BLL.Services
         public async Task DeleteCat(int id)
         {
             await catRepository.Delete(id);
+        }
+
+        public async Task<IEnumerable<Cat>> FindCats(Func<Cat, Boolean> predicate)
+        {
+            return await catFinder.Find(predicate);
+        }
+        public async Task<Cat> GetCatById(int id)
+        {
+            var cat = await catFinder.GetById(id);
+
+            return new Cat { Id = cat.Id, Name = cat.Name };
         }
     }
 }

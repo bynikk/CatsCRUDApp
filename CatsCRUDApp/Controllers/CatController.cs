@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using BLL.Entities;
 using BLL.Interfaces;
 using CatsCRUDApp.Models;
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -57,18 +57,11 @@ namespace CatsCRUDApp.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            var existingCat = await catService.GetCat(id);
+            var existingCat = await catService.GetCatById(id);
 
             if (Equals(existingCat, null)) return NotFound();
 
-            if (existingCat != null)
-            {
-                await catService.DeleteCat(existingCat.Id);
-            }
-            else
-            {
-                return NotFound();
-            }
+            await catService.DeleteCat(existingCat.Id);
 
             return Ok($"Object by {id} id  was removed successfully");
         }

@@ -1,6 +1,6 @@
-﻿using DAL.EF;
-using DAL.Entities;
-using DAL.Interfaces;
+﻿using BLL.Entities;
+using BLL.Interfaces;
+using DAL.EF;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
@@ -11,7 +11,7 @@ namespace DAL.Repositories
 
         public CatRepository(CatDbContext context)
         {
-            this.db = context;
+            db = context;
         }
         public async Task Create(Cat item)
         {
@@ -27,16 +27,6 @@ namespace DAL.Repositories
                 db.Cats.Remove(cat);
                 await Task.Run(() => db.SaveChangesAsync());
             }
-        }
-
-        public async Task<IEnumerable<Cat>> Find(Func<Cat, bool> predicate)
-        {
-            return db.Cats.Where(predicate);
-        }
-
-        public async Task<Cat?> Get(int id)
-        {
-            return await Task.Run(() => db.Cats.FirstOrDefaultAsync(x => x.Id == id));
         }
 
         public async Task<IEnumerable<Cat>> GetAll()
