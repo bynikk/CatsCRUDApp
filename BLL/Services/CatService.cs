@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using BLL.DTO;
 using BLL.Infrastructure;
 using BLL.Interfaces;
+using BLL.Models;
 using DAL.Entities;
 using DAL.Interfaces;
 
@@ -16,34 +16,31 @@ namespace BLL.Services
             this.catRepository = rep;
         }
 
-        public async Task CreateCat(CatDTO catDto)
+        public async Task CreateCat(CatViewModel catDto)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatDTO, Cat>(catDto);
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
+            Cat cat = mapper.Map<CatViewModel, Cat>(catDto);
 
             await catRepository.Create(cat);
         }
 
-        public async Task<CatDTO> GetCat(int id)
+        public async Task<CatViewModel> GetCat(int id)
         {
             Cat cat = await catRepository.Get(id);
 
-            if (cat == null)
-                throw new ValidationException("No cat in context with this id", "");
-
-            return new CatDTO { Id = cat.Id, Name = cat.Name };
+            return new CatViewModel { Id = cat.Id, Name = cat.Name };
         }
 
-        public async Task<IEnumerable<CatDTO>> GetCats()
+        public async Task<IEnumerable<CatViewModel>> GetCats()
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatDTO>()).CreateMapper();
-            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatDTO>>(await catRepository.GetAll());
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
+            return mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(await catRepository.GetAll());
         }
 
-        public async Task UpdateCat(CatDTO catDto)
+        public async Task UpdateCat(CatViewModel catDto)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatDTO, Cat>()).CreateMapper();
-            Cat cat = mapper.Map<CatDTO, Cat>(catDto);
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
+            Cat cat = mapper.Map<CatViewModel, Cat>(catDto);
 
             await catRepository.Update(cat);
         }

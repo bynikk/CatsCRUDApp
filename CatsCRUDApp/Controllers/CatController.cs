@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
-using BLL.DTO;
 using BLL.Interfaces;
-using CatsCRUDApp.Models;
+using BLL.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -28,12 +27,7 @@ namespace CatsCRUDApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CatViewModel model)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
-            CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
-
-            await catService.CreateCat(catDto);
+            await catService.CreateCat(model);
 
             return Ok("Add successfully");
         }
@@ -42,12 +36,7 @@ namespace CatsCRUDApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(CatViewModel model)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, CatDTO>()).CreateMapper();
-            CatDTO catDto = mapper.Map<CatViewModel, CatDTO>(model);
-
-            await catService.UpdateCat(catDto);
+            await catService.UpdateCat(model);
 
             return Ok($"Object by {model.Id} id was updated successfully");
         }
@@ -56,9 +45,8 @@ namespace CatsCRUDApp.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var existingCat = await catService.GetCat(id);
 
-            CatDTO existingCat = await catService.GetCat(id);
             if (Equals(existingCat, null)) return NotFound();
 
             if (existingCat != null)
