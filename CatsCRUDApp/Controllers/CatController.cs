@@ -21,7 +21,7 @@ namespace CatsCRUDApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var cats = await catService.GetCats();
+            var cats = await catService.Get();
 
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
             var catsViewModel = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
@@ -36,7 +36,7 @@ namespace CatsCRUDApp.Controllers
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
-            await catService.CreateCat(cat);
+            await catService.Create(cat);
 
             return Ok("Add successfully");
         }
@@ -48,7 +48,7 @@ namespace CatsCRUDApp.Controllers
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
-            await catService.UpdateCat(cat);
+            await catService.Update(cat);
 
             return Ok($"Object by {model.Id} id was updated successfully");
         }
@@ -61,7 +61,7 @@ namespace CatsCRUDApp.Controllers
 
             if (Equals(existingCat, null)) return NotFound();
 
-            await catService.DeleteCat(existingCat.Id);
+            await catService.Delete(existingCat.Id);
 
             return Ok($"Object by {id} id  was removed successfully");
         }

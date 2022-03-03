@@ -15,8 +15,7 @@ namespace DAL.Repositories
         }
         public async Task Create(Cat item)
         {
-            await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name, CreatedDate = DateTime.Now });
-            await Task.Run(() => db.SaveChangesAsync());
+            await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name});
         }
 
         public async Task Delete(int id)
@@ -25,10 +24,8 @@ namespace DAL.Repositories
             if (cat != null)
             {
                 db.Cats.Remove(cat);
-                await Task.Run(() => db.SaveChangesAsync());
             }
         }
-
         public async Task<IEnumerable<Cat>> GetAll()
         {
             return db.Cats;
@@ -40,8 +37,6 @@ namespace DAL.Repositories
 
             cat.Id = item.Id;
             cat.Name = item.Name;
-
-            await Task.Run(() => db.SaveChangesAsync());
         }
     }
 }

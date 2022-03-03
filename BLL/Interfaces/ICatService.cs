@@ -4,11 +4,10 @@ namespace BLL.Interfaces
 {
     public interface ICatService
     {
-        Task CreateCat(Cat catDto);
-        Task UpdateCat(Cat catDto);
-        Task DeleteCat(int id);
-        Task<IEnumerable<Cat>> GetCats();
-        Task<IEnumerable<Cat>> FindCats(Func<Cat, Boolean> predicate);
+        Task Create(Cat cat);
+        Task Update(Cat cat);
+        Task Delete(int id);
+        Task<IEnumerable<Cat>> Get();
         Task<Cat> GetCatById(int id);
     }
 }
