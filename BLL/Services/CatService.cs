@@ -18,7 +18,7 @@ namespace BLL.Services
 
         public async Task Create(Cat cat)
         {
-            await catRepository.Create(cat);
+            catRepository.Create(cat);
             await unitOfWork.Save();
         }
 
@@ -29,13 +29,13 @@ namespace BLL.Services
 
         public async Task Update(Cat cat)
         {
-            await catRepository.Update(cat);
+            catRepository.Update(cat);
             await unitOfWork.Save();
         }
 
         public async Task Delete(int id)
         {
-            await catRepository.Delete(id);
+            catRepository.Delete(id);
             await unitOfWork.Save();
         }
 
