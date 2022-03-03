@@ -35,7 +35,6 @@ namespace DAL.Repositories
         {
             var cat = db.Cats.FirstOrDefault(p => p.Id == item.Id);
 
-            cat.Id = item.Id;
             cat.Name = item.Name;
         }
     }
