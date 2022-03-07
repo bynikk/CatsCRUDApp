@@ -13,12 +13,12 @@ namespace DAL.Repositories
         {
             db = context;
         }
-        public async Task Create(Cat item)
+        public async void Create(Cat item)
         {
-            await db.Cats.AddAsync(new Cat { Id = item.Id, Name = item.Name});
+            await db.Cats.AddAsync(item);
         }
 
-        public async Task Delete(int id)
+        public async void Delete(int id)
         {
             var cat = await db.Cats.FirstOrDefaultAsync(x => x.Id == id);
             if (cat != null)
@@ -31,11 +31,10 @@ namespace DAL.Repositories
             return db.Cats;
         }
 
-        public async Task Update(Cat item)
+        public async void Update(Cat item)
         {
-            var cat = await db.Cats.FirstOrDefaultAsync(p => p.Id == item.Id);
+            var cat = db.Cats.FirstOrDefault(p => p.Id == item.Id);
 
-            cat.Id = item.Id;
             cat.Name = item.Name;
         }
     }
