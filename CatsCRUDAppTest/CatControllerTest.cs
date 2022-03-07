@@ -1,21 +1,26 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Services;
+using CatsCRUDApp.Controllers;
+using CatsCRUDApp.Models;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CatsCRUDAppTest
 {
-    public class CatServiceTest
+    public class CatControllerTest
     {
         Mock<IUnitOfWork> mockUnitOfWork;
         Mock<IFinder<Cat>> mockFinder;
         Mock<IRepository<Cat>> mockRepository;
 
-        private Cat defaultCat = new Cat() { Id = 0, Name = "name" };
+        private CatViewModel defaultCatViewModel = new CatViewModel() { Id = 0, Name = "name", Description = ""};
 
         [SetUp]
         public void SetUp()
@@ -26,69 +31,66 @@ namespace CatsCRUDAppTest
         }
 
         [Test]
-        public void GetTrueTest()
+        public void GetReturnsAllCatsTrueTest()
         {
-            mockRepository.Setup(r => r.GetAll()).Returns(GetTestCats);
+            mockRepository.Setup(r => r.GetAll()).Returns(GetTestCats());
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
 
-            var cats = fakeCatService.Get();
+            var controller = new CatController(fakeCatService);
 
-            Assert.AreEqual(cats.Result.Count(), GetTestCats().Result.Count());
-            Assert.IsNotNull(cats);
+            var result = controller.Get();
 
+
+            Assert.AreEqual(result.GetType(), typeof(Task<IActionResult>));
+
+            var model = result.Result as OkObjectResult;
+
+            var cats = model.Value as IEnumerable<CatViewModel>;
+
+            Assert.AreEqual(GetTestCats().Result.Count(), cats.Count());
         }
 
         [Test]
-        public void CreateTrueTest()
+        public void PostTrueTest()
         {
             mockRepository.Setup(r => r.Create(It.IsAny<Cat>()));
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
+            var controller = new CatController(fakeCatService);
 
-            fakeCatService.Create(defaultCat);
+            var result = controller.Post(defaultCatViewModel);
 
             mockRepository.Verify(r => r.Create(It.IsAny<Cat>()), Times.Once());
-
-        }
-
-        [Test]
-        public void UpdateTrueTest()
-        {
-            mockRepository.Setup(r => r.Update(It.IsAny<Cat>()));
-
-            CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
-
-            fakeCatService.Update(defaultCat);
-
-            mockRepository.Verify(r => r.Update(It.IsAny<Cat>()), Times.Once);
-
+            Assert.AreEqual(result.GetType(), typeof(Task<IActionResult>));
         }
 
         [Test]
         public void DeleteTrueTest()
         {
             mockRepository.Setup(r => r.Delete(It.IsAny<int>()));
+            mockFinder.Setup(r => r.GetById(It.IsAny<int>())).Returns(GetTestCat());
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
+            var controller = new CatController(fakeCatService);
 
-            fakeCatService.Delete(defaultCat.Id);
+            controller.Delete(defaultCatViewModel.Id);
 
             mockRepository.Verify(r => r.Delete(It.IsAny<int>()), Times.Once);
-
         }
 
         [Test]
-        public void GetCatByIdTest()
+        public void PutTrueTest()
         {
-            mockFinder.Setup(r => r.GetById(It.IsAny<int>())).Returns(GetTestCat);
+            mockRepository.Setup(r => r.Update(It.IsAny<Cat>()));
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
+            var controller = new CatController(fakeCatService);
 
-            var expected = GetTestCat().Result;
+            var result = controller.Put(defaultCatViewModel);
 
-            Assert.AreEqual(expected.Name, fakeCatService.GetCatById(expected.Id).Result.Name);
-            Assert.AreEqual(expected.Id, fakeCatService.GetCatById(expected.Id).Result.Id);
+            mockRepository.Verify(r => r.Update(It.IsAny<Cat>()), Times.Once());
+            Assert.AreEqual(result.GetType(), typeof(Task<IActionResult>));
         }
 
         private async Task<IEnumerable<Cat>> GetTestCats()
@@ -102,11 +104,9 @@ namespace CatsCRUDAppTest
             };
             return cats.AsEnumerable();
         }
-
         private async Task<Cat> GetTestCat()
         {
             return new Cat() { Id = 11, Name = "Tom" };
         }
-
     }
 }

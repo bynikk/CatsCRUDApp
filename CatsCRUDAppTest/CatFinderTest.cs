@@ -5,15 +5,10 @@ using DAL.Finders;
 using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CatsCRUDAppTest
 {
-    class CatFinderTest
+    public class CatFinderTest
     {
         private IFinder<Cat>? catFinder;
         private IRepository<Cat>? catRepository;
