@@ -8,10 +8,12 @@ namespace DAL.Repositories
     public class CatRepository : IRepository<Cat>
     {
         private DbSet<Cat> dbSet;
+        CatDbContext context;
 
-        public CatRepository(DbSet<Cat> dbSet)
+        public CatRepository(CatDbContext context, DbSet<Cat> dbSet)
         {
             this.dbSet = dbSet;
+            this.context = context;
         }
 
         public void Create(Cat item)
@@ -26,7 +28,10 @@ namespace DAL.Repositories
 
         public void Update(Cat item)
         {
-            dbSet.Attach(item).State = EntityState.Modified;
+            if (context.Entry<Cat>(item).State == EntityState.Detached) {
+                dbSet.Attach(item);
+            }
+            context.Entry<Cat>(item).State = EntityState.Modified;
 
         }
 

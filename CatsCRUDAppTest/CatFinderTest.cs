@@ -25,7 +25,7 @@ namespace CatsCRUDAppTest
             context = new(dbBuilder.Options);
 
             catFinder = new CatFinder(context.Cats);
-            catRepository = new CatRepository(context.Cats);
+            catRepository = new CatRepository(context, context.Cats);
         }
 
         [Test]

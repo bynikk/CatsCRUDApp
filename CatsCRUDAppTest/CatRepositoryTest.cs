@@ -23,7 +23,7 @@ namespace CatsCRUDAppTest
             var dbBuilder = new DbContextOptionsBuilder<CatDbContext>();
             dbBuilder.UseInMemoryDatabase(databaseName: "FakeDbContext");
             context = new (dbBuilder.Options);
-            catRepository = new CatRepository(context.Cats);
+            catRepository = new CatRepository(context, context.Cats);
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace CatsCRUDAppTest
         public void UpdateTrueTest()
         {
             var cat = new Cat() { Id = 14, Name = "cat14"};
-            var updateCat = new Cat() { Id = cat.Id, Name = "cat1" };
+            var updateCat = new Cat() { Id = 14, Name = "cat1" };
 
             catRepository?.Create(cat);
             context.SaveChanges();
