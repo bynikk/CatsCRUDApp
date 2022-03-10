@@ -6,8 +6,8 @@ namespace BLL.Interfaces
     {
         Task Create(Cat cat);
         Task Update(Cat cat);
-        Task Delete(int id);
-        Task<IEnumerable<Cat>> Get();
-        Task<Cat> GetCatById(int id);
+        Task Delete(Cat cat);
+        Task<List<Cat>> Get();
+        Task<Cat> GetCatById(Cat cat);
     }
 }

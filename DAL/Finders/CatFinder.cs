@@ -1,21 +1,21 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
-using DAL.EF;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Finders
 {
     public class CatFinder : IFinder<Cat>
     {
-        private CatDbContext db;
+        private DbSet<Cat> dbSet;
 
-        public CatFinder(CatDbContext context)
+        public CatFinder(DbSet<Cat> dbSet)
         {
-            db = context;
+            this.dbSet = dbSet;
         }
 
-        public async Task<Cat?> GetById(int id)
+        public Task<Cat?> GetById(Cat cat)
         {
-            return db.Cats.FirstOrDefault(x => x.Id == id);
+            return dbSet.FirstOrDefaultAsync(x => x.Id == cat.Id);
         }
     }
 }

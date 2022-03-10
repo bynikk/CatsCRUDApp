@@ -1,8 +1,5 @@
-﻿using BLL.Entities;
-using BLL.Interfaces;
+﻿using BLL.Interfaces;
 using DAL.EF;
-using DAL.Finders;
-using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
 {

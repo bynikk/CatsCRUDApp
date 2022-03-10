@@ -24,8 +24,8 @@ namespace CatsCRUDAppTest
             dbBuilder.UseInMemoryDatabase(databaseName: "FakeDbContext");
             context = new(dbBuilder.Options);
 
-            catFinder = new CatFinder(context);
-            catRepository = new CatRepository(context);
+            catFinder = new CatFinder(context.Cats);
+            catRepository = new CatRepository(context.Cats);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace CatsCRUDAppTest
             context?.SaveChanges();
             int id = cat.Id;
 
-            var findedCat = catFinder?.GetById(cat.Id);
+            var findedCat = catFinder?.GetById(cat);
             var expectedCat = context?.Find<Cat>(cat.Id);
 
             Assert.AreEqual(expectedCat, findedCat?.Result);

@@ -68,15 +68,15 @@ namespace CatsCRUDAppTest
         [Test]
         public void DeleteTrueTest()
         {
-            mockRepository.Setup(r => r.Delete(It.IsAny<int>()));
-            mockFinder.Setup(r => r.GetById(It.IsAny<int>())).Returns(GetTestCat());
+            mockRepository.Setup(r => r.Delete(It.IsAny<Cat>()));
+            mockFinder.Setup(r => r.GetById(It.IsAny<Cat>())).Returns(GetTestCat());
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
             var controller = new CatController(fakeCatService);
 
-            controller.Delete(defaultCatViewModel.Id);
+            controller.Delete(defaultCatViewModel);
 
-            mockRepository.Verify(r => r.Delete(It.IsAny<int>()), Times.Once);
+            mockRepository.Verify(r => r.Delete(It.IsAny<Cat>()), Times.Once);
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace CatsCRUDAppTest
             Assert.AreEqual(result.GetType(), typeof(Task<IActionResult>));
         }
 
-        private async Task<IEnumerable<Cat>> GetTestCats()
+        private async Task<List<Cat>> GetTestCats()
         {
             var cats = new List<Cat>
             {
@@ -102,7 +102,7 @@ namespace CatsCRUDAppTest
                 new Cat { Id=2, Name="Sam"},
                 new Cat { Id=3, Name="Kate"}
             };
-            return cats.AsEnumerable();
+            return cats;
         }
         private async Task<Cat> GetTestCat()
         {

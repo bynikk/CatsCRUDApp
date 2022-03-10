@@ -68,30 +68,30 @@ namespace CatsCRUDAppTest
         [Test]
         public void DeleteTrueTest()
         {
-            mockRepository.Setup(r => r.Delete(It.IsAny<int>()));
+            mockRepository.Setup(r => r.Delete(It.IsAny<Cat>()));
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
 
-            fakeCatService.Delete(defaultCat.Id);
+            fakeCatService.Delete(defaultCat);
 
-            mockRepository.Verify(r => r.Delete(It.IsAny<int>()), Times.Once);
+            mockRepository.Verify(r => r.Delete(It.IsAny<Cat>()), Times.Once);
 
         }
 
         [Test]
         public void GetCatByIdTest()
         {
-            mockFinder.Setup(r => r.GetById(It.IsAny<int>())).Returns(GetTestCat);
+            mockFinder.Setup(r => r.GetById(It.IsAny<Cat>())).Returns(GetTestCat);
 
             CatService fakeCatService = new CatService(mockRepository.Object, mockFinder.Object, mockUnitOfWork.Object);
 
             var expected = GetTestCat().Result;
 
-            Assert.AreEqual(expected.Name, fakeCatService.GetCatById(expected.Id).Result.Name);
-            Assert.AreEqual(expected.Id, fakeCatService.GetCatById(expected.Id).Result.Id);
+            Assert.AreEqual(expected.Name, fakeCatService.GetCatById(expected).Result.Name);
+            Assert.AreEqual(expected.Id, fakeCatService.GetCatById(expected).Result.Id);
         }
 
-        private async Task<IEnumerable<Cat>> GetTestCats()
+        private async Task<List<Cat>> GetTestCats()
         {
             var cats = new List<Cat>
             {
@@ -100,7 +100,7 @@ namespace CatsCRUDAppTest
                 new Cat { Id=2, Name="Sam"},
                 new Cat { Id=3, Name="Kate"}
             };
-            return cats.AsEnumerable();
+            return cats;
         }
 
         private async Task<Cat> GetTestCat()

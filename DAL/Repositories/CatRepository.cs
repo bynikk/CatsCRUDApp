@@ -7,35 +7,33 @@ namespace DAL.Repositories
 {
     public class CatRepository : IRepository<Cat>
     {
-        private CatDbContext db;
+        private DbSet<Cat> dbSet;
 
-        public CatRepository(CatDbContext context)
+        public CatRepository(DbSet<Cat> dbSet)
         {
-            db = context;
-        }
-        public async void Create(Cat item)
-        {
-            await db.Cats.AddAsync(item);
+            this.dbSet = dbSet;
         }
 
-        public async void Delete(int id)
+        public void Create(Cat item)
         {
-            var cat = await db.Cats.FirstOrDefaultAsync(x => x.Id == id);
-            if (cat != null)
-            {
-                db.Cats.Remove(cat);
-            }
-        }
-        public async Task<IEnumerable<Cat>> GetAll()
-        {
-            return db.Cats;
+            dbSet.Add(item);
         }
 
-        public async void Update(Cat item)
+        public void Delete(Cat cat)
         {
-            var cat = db.Cats.FirstOrDefault(p => p.Id == item.Id);
-
-            cat.Name = item.Name;
+            dbSet.Remove(cat);
         }
+
+        public void Update(Cat item)
+        {
+            dbSet.Attach(item).State = EntityState.Modified;
+
+        }
+
+        public Task<List<Cat>> GetAll()
+        {
+            return dbSet.ToListAsync();
+        }
+
     }
 }

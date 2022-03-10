@@ -55,15 +55,18 @@ namespace CatsCRUDApp.Controllers
 
         // DELETE api/Cat
         [HttpDelete]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(CatViewModel model)
         {
-            var existingCat = await catService.GetCatById(id);
+            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
+            var cat = mapper.Map<CatViewModel, Cat>(model);
+
+            var existingCat = await catService.GetCatById(cat);
 
             if (Equals(existingCat, null)) return NotFound();
 
-            await catService.Delete(existingCat.Id);
+            await catService.Delete(existingCat);
 
-            return Ok($"Object by {id} id  was removed successfully");
+            return Ok($"Object by {cat.Id} id  was removed successfully");
         }
     }
 }

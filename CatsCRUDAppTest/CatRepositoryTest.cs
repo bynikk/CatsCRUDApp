@@ -23,7 +23,7 @@ namespace CatsCRUDAppTest
             var dbBuilder = new DbContextOptionsBuilder<CatDbContext>();
             dbBuilder.UseInMemoryDatabase(databaseName: "FakeDbContext");
             context = new (dbBuilder.Options);
-            catRepository = new CatRepository(context);
+            catRepository = new CatRepository(context.Cats);
         }
 
         [Test]
@@ -49,15 +49,14 @@ namespace CatsCRUDAppTest
         [Test]
         public void UpdateTrueTest()
         {
-            // Item creation
             var cat = new Cat() { Id = 14, Name = "cat14"};
-            catRepository?.Create(cat);
-            context?.SaveChanges();
-            //
+            var updateCat = new Cat() { Id = cat.Id, Name = "cat1" };
 
-            Cat updateCat = new Cat() { Id = cat.Id, Name = "cat1" };
+            catRepository?.Create(cat);
+            context.SaveChanges();
+
             catRepository?.Update(updateCat);
-            context?.SaveChanges();
+            context.SaveChanges();
              
             var existingCat = context?.Find<Cat>(updateCat.Id);
 
@@ -70,7 +69,7 @@ namespace CatsCRUDAppTest
         {
 
             Cat deleteCat = new Cat() { Id = 1, Name = "cat1" };
-            catRepository?.Delete(deleteCat.Id);
+            catRepository?.Delete(deleteCat);
             context?.SaveChanges();
 
             var existingCat = context?.Find<Cat>(deleteCat.Id);

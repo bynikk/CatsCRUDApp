@@ -16,32 +16,32 @@ namespace BLL.Services
             unitOfWork = uow;
         }
 
-        public async Task Create(Cat cat)
+        public Task Create(Cat cat)
         {
             catRepository.Create(cat);
-            await unitOfWork.Save();
+            return unitOfWork.Save();
         }
 
-        public async Task<IEnumerable<Cat>> Get()
+        public Task<List<Cat>> Get()
         {
-            return await catRepository.GetAll();
+            return catRepository.GetAll();
         }
 
-        public async Task Update(Cat cat)
+        public Task Update(Cat cat)
         {
             catRepository.Update(cat);
-            await unitOfWork.Save();
+            return unitOfWork.Save();
         }
 
-        public async Task Delete(int id)
+        public Task Delete(Cat cat)
         {
-            catRepository.Delete(id);
-            await unitOfWork.Save();
+            catRepository.Delete(cat);
+            return unitOfWork.Save();
         }
 
-        public async Task<Cat> GetCatById(int id)
+        public Task<Cat> GetCatById(Cat cat)
         {
-            return await catFinder.GetById(id);
+            return catFinder.GetById(cat);
         }
     }
 }
