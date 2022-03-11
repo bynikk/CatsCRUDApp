@@ -1,9 +1,13 @@
 using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Services;
+using CatsCRUDApp.Models;
+using CatsCRUDApp.Validators;
 using DAL.EF;
 using DAL.Finders;
 using DAL.Repositories;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +18,10 @@ builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinder>();
 builder.Services.AddScoped<IRepository<Cat>, CatRepository>();
 builder.Services.AddScoped<IUnitOfWork, EFUnitOfWork>();
+
+builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
+builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
+
 var optionsBuilder = new DbContextOptionsBuilder<CatDbContext>();
 
 var options = optionsBuilder
@@ -31,7 +39,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddMvc();
+builder.Services.AddMvc().AddFluentValidation(fv => fv.ImplicitlyValidateRootCollectionElements = true);
 
 var app = builder.Build();
 

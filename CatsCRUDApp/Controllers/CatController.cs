@@ -2,6 +2,8 @@
 using BLL.Entities;
 using BLL.Interfaces;
 using CatsCRUDApp.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatsCRUDApp.Controllers
@@ -11,10 +13,16 @@ namespace CatsCRUDApp.Controllers
     public class CatController : ControllerBase
     {
         ICatService catService;
+        IValidator<Cat> catValidator;
+        IValidator<CatViewModel> catViewModelValidator;
 
-        public CatController(ICatService serv)
+        public CatController(ICatService catService,
+            IValidator<Cat> catValidator,
+            IValidator<CatViewModel> catViewModelValidator)
         {
-            catService = serv;
+            this.catService = catService;
+            this.catValidator = catValidator;
+            this.catViewModelValidator = catViewModelValidator;
         }
 
         // GET api/Cat
@@ -24,9 +32,9 @@ namespace CatsCRUDApp.Controllers
             var cats = await catService.Get();
 
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
-            var catsViewModel = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
+            var catsViewModels = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
 
-            return Ok(catsViewModel);
+            return Ok(catsViewModels);
         }
 
         // POST api/Cat
@@ -35,6 +43,13 @@ namespace CatsCRUDApp.Controllers
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
+
+            var result = catValidator.Validate(cat);
+
+            if (!result.IsValid)
+            {
+                return BadRequest(result.ToString());
+            }
 
             await catService.Create(cat);
 
@@ -48,6 +63,13 @@ namespace CatsCRUDApp.Controllers
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
+            var result = catValidator.Validate(cat);
+
+            if (!result.IsValid)
+            {
+                return BadRequest(result.ToString());
+            }
+
             await catService.Update(cat);
 
             return Ok($"Object by {model.Id} id was updated successfully");
@@ -59,6 +81,13 @@ namespace CatsCRUDApp.Controllers
         {
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
+
+            var result = catValidator.Validate(cat);
+
+            if (!result.IsValid)
+            {
+                return BadRequest(result.ToString());
+            }
 
             var existingCat = await catService.GetCatById(cat);
 
