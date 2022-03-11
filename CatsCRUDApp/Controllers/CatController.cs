@@ -15,14 +15,17 @@ namespace CatsCRUDApp.Controllers
         ICatService catService;
         IValidator<Cat> catValidator;
         IValidator<CatViewModel> catViewModelValidator;
+        IMapper mapper;
 
         public CatController(ICatService catService,
             IValidator<Cat> catValidator,
-            IValidator<CatViewModel> catViewModelValidator)
+            IValidator<CatViewModel> catViewModelValidator,
+            IMapper mapper)
         {
             this.catService = catService;
             this.catValidator = catValidator;
             this.catViewModelValidator = catViewModelValidator;
+            this.mapper = mapper;
         }
 
         // GET api/Cat
@@ -31,7 +34,6 @@ namespace CatsCRUDApp.Controllers
         {
             var cats = await catService.Get();
 
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();
             var catsViewModels = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
 
             return Ok(catsViewModels);
@@ -41,7 +43,6 @@ namespace CatsCRUDApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CatViewModel model)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
             var result = catValidator.Validate(cat);
@@ -60,7 +61,6 @@ namespace CatsCRUDApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(CatViewModel model)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
             var result = catValidator.Validate(cat);
@@ -79,7 +79,6 @@ namespace CatsCRUDApp.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(CatViewModel model)
         {
-            var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
             var result = catValidator.Validate(cat);
