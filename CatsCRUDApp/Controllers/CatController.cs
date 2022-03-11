@@ -80,7 +80,7 @@ namespace CatsCRUDApp.Controllers
         public async Task<IActionResult> Delete(CatViewModel model)
         {
             var cat = mapper.Map<CatViewModel, Cat>(model);
-
+             
             var result = catValidator.Validate(cat);
 
             if (!result.IsValid)

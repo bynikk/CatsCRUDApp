@@ -10,8 +10,6 @@ namespace CatsCRUDApp
         {
             CreateMap<CatViewModel, Cat>();
             CreateMap<Cat, CatViewModel>();
-            CreateMap<IEnumerable<Cat>, IEnumerable<CatViewModel>>();
-            CreateMap<IEnumerable<CatViewModel>, IEnumerable<Cat>>();
         }
     }
 }
