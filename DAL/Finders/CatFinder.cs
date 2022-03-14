@@ -6,16 +6,16 @@ namespace DAL.Finders
 {
     public class CatFinder : IFinder<Cat>
     {
-        private DbSet<Cat> dbSet;
+        private IPetsContext context;
 
-        public CatFinder(DbSet<Cat> dbSet)
+        public CatFinder(IPetsContext context)
         {
-            this.dbSet = dbSet;
+            this.context = context;
         }
 
         public Task<Cat?> GetById(Cat cat)
         {
-            return dbSet.FirstOrDefaultAsync(x => x.Id == cat.Id);
+            return context.Cats.FindOne();
         }
     }
 }

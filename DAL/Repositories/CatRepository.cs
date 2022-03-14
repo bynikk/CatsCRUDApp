@@ -2,6 +2,7 @@
 using BLL.Interfaces;
 using DAL.EF;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace DAL.Repositories
 {
@@ -9,21 +10,23 @@ namespace DAL.Repositories
     {
         private DbSet<Cat> dbSet;
         CatDbContext context;
+        IPetsContext petsContext;
 
-        public CatRepository(CatDbContext context, DbSet<Cat> dbSet)
+        public CatRepository(CatDbContext context, DbSet<Cat> dbSet, IPetsContext petsContext)
         {
             this.dbSet = dbSet;
             this.context = context;
+            this.petsContext = petsContext;
         }
 
         public void Create(Cat item)
         {
-            dbSet.Add(item);
+            petsContext.Cats.InsertOne(item);
         }
 
         public void Delete(Cat cat)
         {
-            dbSet.Remove(cat);
+            petsContext.Cats.DeleteOne(c => c.Id == cat.Id);
         }
 
         public void Update(Cat item)
@@ -37,7 +40,7 @@ namespace DAL.Repositories
 
         public Task<List<Cat>> GetAll()
         {
-            return dbSet.ToListAsync();
+            return petsContext.Cats.Find(_ => true).ToListAsync();
         }
 
     }

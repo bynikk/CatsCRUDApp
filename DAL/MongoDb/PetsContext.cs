@@ -15,10 +15,12 @@ namespace DAL.MongoDb
 
         public PetsContext()
         {
-            var client = new MongoClient("mongodb://admin:p%40ssw0rd@localhost:27017/?authSource=admin");
+            var client = new MongoClient("mongodb://localhost:27017");
             database = client.GetDatabase("carscrudapp");
+            var listCollections = database.ListCollectionsAsync();
         }
         public IMongoCollection<Cat> Cats => database.GetCollection<Cat>("Cats");
         public IMongoCollection<Dog> Dogs => database.GetCollection<Dog>("Dogs");
+
     }
 }

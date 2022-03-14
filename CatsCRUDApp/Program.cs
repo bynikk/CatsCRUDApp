@@ -5,6 +5,7 @@ using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
 using DAL.EF;
 using DAL.Finders;
+using DAL.MongoDb;
 using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -22,6 +23,8 @@ builder.Services.AddScoped<IUnitOfWork, EFUnitOfWork>();
 
 builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
+
+builder.Services.AddScoped<IPetsContext, PetsContext>();
 
 var optionsBuilder = new DbContextOptionsBuilder<CatDbContext>();
 

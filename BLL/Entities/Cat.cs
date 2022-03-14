@@ -6,7 +6,6 @@ namespace BLL.Entities
     public class Cat
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public int Id { get; set; }
         [BsonElement("Name")]
         public string? Name { get; set; }
