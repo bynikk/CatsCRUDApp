@@ -2,6 +2,7 @@
 using BLL.Entities;
 using BLL.Interfaces;
 using CatsCRUDApp.Models;
+using DAL.MongoDb;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,7 @@ namespace CatsCRUDApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
+            var mongo = new PetsContext();
             var cats = await catService.Get();
 
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<Cat, CatViewModel>()).CreateMapper();

@@ -8,6 +8,7 @@ using DAL.Finders;
 using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +40,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddMvc().AddFluentValidation(fv => fv.ImplicitlyValidateRootCollectionElements = true);
+builder.Services.AddMvc()
+    .AddFluentValidation(fv => fv.ImplicitlyValidateRootCollectionElements = true);
 
 var app = builder.Build();
 
