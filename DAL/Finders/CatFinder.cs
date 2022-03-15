@@ -1,6 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace DAL.Finders
 {
@@ -13,9 +14,10 @@ namespace DAL.Finders
             this.context = context;
         }
 
-        public Task<Cat?> GetById(Cat cat)
+        public Task<Cat> GetById(Cat cat)
         {
-            return context.Cats.FindOne();
+            var filter = Builders<Cat>.Filter.Eq("Id", cat.Id);
+            return context.Cats.Find(filter).FirstOrDefaultAsync();
         }
     }
 }

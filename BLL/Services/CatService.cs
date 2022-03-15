@@ -18,8 +18,7 @@ namespace BLL.Services
 
         public Task Create(Cat cat)
         {
-            catRepository.Create(cat);
-            return unitOfWork.Save();
+            return catRepository.Create(cat);
         }
 
         public Task<List<Cat>> Get()
@@ -29,14 +28,12 @@ namespace BLL.Services
 
         public Task Update(Cat cat)
         {
-            catRepository.Update(cat);
-            return unitOfWork.Save();
+            return catRepository.Update(cat);
         }
 
         public Task Delete(Cat cat)
         {
-            catRepository.Delete(cat);
-            return unitOfWork.Save();
+            return catRepository.Delete(cat);
         }
 
         public Task<Cat> GetCatById(Cat cat)
