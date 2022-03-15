@@ -1,11 +1,6 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL.MongoDb
 {
@@ -15,9 +10,13 @@ namespace DAL.MongoDb
 
         public PetsContext()
         {
-            var client = new MongoClient("mongodb://localhost:27017");
-            database = client.GetDatabase("carscrudapp");
-            var listCollections = database.ListCollectionsAsync();
+            var config = new MongoDBConfig();
+            config.Port = 27017;
+            config.Host = "localhost";
+            config.Database = "carscrudapp";
+
+            var client = new MongoClient(config.ConnectionString);
+            database = client.GetDatabase(config.Database);
         }
         public IMongoCollection<Cat> Cats => database.GetCollection<Cat>("Cats");
         public IMongoCollection<Dog> Dogs => database.GetCollection<Dog>("Dogs");

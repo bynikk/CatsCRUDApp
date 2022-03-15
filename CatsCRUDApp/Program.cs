@@ -9,7 +9,6 @@ using DAL.MongoDb;
 using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinder>();
 builder.Services.AddScoped<IRepository<Cat>, CatRepository>();
-builder.Services.AddScoped<IUnitOfWork, EFUnitOfWork>();
+
+builder.Services.AddScoped<IDogService, DogService>();
+builder.Services.AddScoped<IFinder<Dog>, DogFinder>();
+builder.Services.AddScoped<IRepository<Dog>, DogRepository>();
 
 builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();

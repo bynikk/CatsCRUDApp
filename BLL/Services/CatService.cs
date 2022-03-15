@@ -7,13 +7,11 @@ namespace BLL.Services
     {
         IRepository<Cat> catRepository { get; set; }
         IFinder<Cat> catFinder { get; set; }
-        IUnitOfWork unitOfWork { get; set; }
 
-        public CatService(IRepository<Cat> rep, IFinder<Cat> finder, IUnitOfWork uow)
+        public CatService(IRepository<Cat> rep, IFinder<Cat> finder)
         {
             catRepository = rep;
             catFinder = finder;
-            unitOfWork = uow;
         }
 
         public Task Create(Cat cat)
