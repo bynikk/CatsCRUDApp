@@ -7,7 +7,7 @@ namespace CatsCRUDApp.Validators
     {
         public CatValidator()
         {
-            RuleFor(c => c.Id > 0).NotEmpty();
+            RuleFor(c => c.Id >= 0).NotEmpty();
             RuleFor(c => c.Name).NotEmpty();
             RuleFor(c => c.CreatedDate).NotEmpty();
         }

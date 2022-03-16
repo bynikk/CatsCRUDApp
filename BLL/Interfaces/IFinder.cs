@@ -5,7 +5,7 @@ namespace BLL.Interfaces
 {
     public interface IFinder<T> where T : class
     {
-        Task<T> GetById(Cat cat);
+        Task<T> GetById(T item);
 
     }
 }

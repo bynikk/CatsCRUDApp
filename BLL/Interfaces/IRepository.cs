@@ -3,8 +3,8 @@
     public interface IRepository<T> where T : class
     {
         Task<List<T>> GetAll();
-        void Create(T item);
-        void Update(T item);
-        void Delete(T item);
+        Task Create(T item);
+        Task Update(T item);
+        Task Delete(T item);
     }
 }

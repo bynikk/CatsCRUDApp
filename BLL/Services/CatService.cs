@@ -7,19 +7,18 @@ namespace BLL.Services
     {
         IRepository<Cat> catRepository { get; set; }
         IFinder<Cat> catFinder { get; set; }
-        IUnitOfWork unitOfWork { get; set; }
 
-        public CatService(IRepository<Cat> rep, IFinder<Cat> finder, IUnitOfWork uow)
+        public CatService(
+            IRepository<Cat> catRepository,
+            IFinder<Cat> catFinder)
         {
-            catRepository = rep;
-            catFinder = finder;
-            unitOfWork = uow;
+            this.catRepository = catRepository;
+            this.catFinder = catFinder;
         }
 
         public Task Create(Cat cat)
         {
-            catRepository.Create(cat);
-            return unitOfWork.Save();
+            return catRepository.Create(cat);
         }
 
         public Task<List<Cat>> Get()
@@ -29,14 +28,12 @@ namespace BLL.Services
 
         public Task Update(Cat cat)
         {
-            catRepository.Update(cat);
-            return unitOfWork.Save();
+            return catRepository.Update(cat);
         }
 
         public Task Delete(Cat cat)
         {
-            catRepository.Delete(cat);
-            return unitOfWork.Save();
+            return catRepository.Delete(cat);
         }
 
         public Task<Cat> GetCatById(Cat cat)

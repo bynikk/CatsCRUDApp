@@ -1,43 +1,43 @@
-﻿using BLL.Entities;
+﻿
+using BLL.Entities;
 using BLL.Interfaces;
-using DAL.EF;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace DAL.Repositories
 {
     public class CatRepository : IRepository<Cat>
     {
-        private DbSet<Cat> dbSet;
-        CatDbContext context;
+        IPetsContext context;
 
-        public CatRepository(CatDbContext context, DbSet<Cat> dbSet)
+        public CatRepository(IPetsContext context)
         {
-            this.dbSet = dbSet;
             this.context = context;
         }
 
-        public void Create(Cat item)
+        public Task Create(Cat item)
         {
-            dbSet.Add(item);
+            return context.Cats.InsertOneAsync(item);
         }
 
-        public void Delete(Cat cat)
+        public Task Delete(Cat item)
         {
-            dbSet.Remove(cat);
+            return context.Cats.DeleteOneAsync(c => c.Id == item.Id);
         }
 
-        public void Update(Cat item)
+        public Task Update(Cat item)
         {
-            if (context.Entry<Cat>(item).State == EntityState.Detached) {
-                dbSet.Attach(item);
-            }
-            context.Entry<Cat>(item).State = EntityState.Modified;
+            var filter = Builders<Cat>.Filter.Eq("Id", item.Id);
+            var product = context.Cats.Find(filter).FirstOrDefaultAsync();
+            
+            var update = Builders<Cat>.Update
+                                          .Set(x => x.Name, item.Name);
 
+            return context.Cats.UpdateOneAsync(filter, update);
         }
 
         public Task<List<Cat>> GetAll()
         {
-            return dbSet.ToListAsync();
+            return context.Cats.Find(_ => true).ToListAsync();
         }
 
     }

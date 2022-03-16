@@ -3,15 +3,17 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace BLL.Entities
 {
-    public class Cat
+    public class Dog
     {
         [BsonId]
         public int Id { get; set; }
         [BsonElement("Name")]
         public string? Name { get; set; }
+        [BsonElement("Breed")]
+        public string? Breed { get; set; }
         [BsonElement("CreatedDate")]
         public DateTime CreatedDate { get; set; }
-        public Cat()
+        public Dog()
         {
             CreatedDate = DateTime.Now;
         }
