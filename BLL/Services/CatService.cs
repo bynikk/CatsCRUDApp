@@ -8,10 +8,12 @@ namespace BLL.Services
         IRepository<Cat> catRepository { get; set; }
         IFinder<Cat> catFinder { get; set; }
 
-        public CatService(IRepository<Cat> rep, IFinder<Cat> finder)
+        public CatService(
+            IRepository<Cat> catRepository,
+            IFinder<Cat> catFinder)
         {
-            catRepository = rep;
-            catFinder = finder;
+            this.catRepository = catRepository;
+            this.catFinder = catFinder;
         }
 
         public Task Create(Cat cat)

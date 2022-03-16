@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddScoped<ICatService, CatService>();
-builder.Services.AddScoped<IFinder<Cat>, CatFinder>();
+builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
 builder.Services.AddScoped<IRepository<Cat>, CatRepository>();
 
 builder.Services.AddScoped<IDogService, DogService>();
@@ -27,6 +27,7 @@ builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
 
 builder.Services.AddScoped<IPetsContext, PetsContext>();
+
 
 var optionsBuilder = new DbContextOptionsBuilder<CatDbContext>();
 

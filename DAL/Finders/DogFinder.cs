@@ -14,7 +14,7 @@ namespace DAL.Finders
             this.context = context;
         }
 
-        public Task<Dog> GetById(Cat item)
+        public Task<Dog> GetById(Dog item)
         {
             var filter = Builders<Dog>.Filter.Eq("Id", item.Id);
             return context.Dogs.Find(filter).FirstOrDefaultAsync();

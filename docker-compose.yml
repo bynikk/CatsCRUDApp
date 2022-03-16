@@ -11,3 +11,9 @@ services:
       - ${MONGO_HOST_DATA}/db:/data/db
     ports:
       - "27017:27017"
+  redis:
+    image: redis:6-alpine
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"

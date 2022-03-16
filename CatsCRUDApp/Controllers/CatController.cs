@@ -46,12 +46,7 @@ namespace CatsCRUDApp.Controllers
             var mapper = new MapperConfiguration(cfg => cfg.CreateMap<CatViewModel, Cat>()).CreateMapper();
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
-            var result = catValidator.Validate(cat);
-
-            if (!result.IsValid)
-            {
-                return BadRequest(result.ToString());
-            }
+           //Fluent from ModelState.IsValid
 
             await catService.Create(cat);
 
