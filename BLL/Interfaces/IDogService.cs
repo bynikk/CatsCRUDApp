@@ -8,6 +8,6 @@ namespace BLL.Interfaces
         Task Update(Dog dog);
         Task Delete(Dog dog);
         Task<List<Dog>> Get();
-        Task<Dog> GetCatById(Dog dog);
+        Task<Dog> GetCatById(int dogId);
     }
 }

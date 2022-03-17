@@ -17,8 +17,6 @@ namespace CatsCRUDApp.Controllers
         IMapper mapper;
 
         public CatController(ICatService catService,
-            IValidator<Cat> catValidator,
-            IValidator<CatViewModel> catViewModelValidator,
             IMapper mapper)
         {
             this.catService = catService;
@@ -79,9 +77,9 @@ namespace CatsCRUDApp.Controllers
                 return BadRequest(ModelState.Values);
             }
 
-            var existingCat = await catService.GetCatById(cat);
+            var existingCat = await catService.GetCatById(cat.Id);
 
-            if (Equals(existingCat, null)) return NotFound();
+            if (existingCat == null) return NotFound();
 
             await catService.Delete(existingCat);
 
