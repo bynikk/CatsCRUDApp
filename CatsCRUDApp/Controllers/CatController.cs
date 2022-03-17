@@ -14,8 +14,6 @@ namespace CatsCRUDApp.Controllers
     public class CatController : ControllerBase
     {
         ICatService catService;
-        IValidator<Cat> catValidator;
-        IValidator<CatViewModel> catViewModelValidator;
         IMapper mapper;
 
         public CatController(ICatService catService,
@@ -24,8 +22,6 @@ namespace CatsCRUDApp.Controllers
             IMapper mapper)
         {
             this.catService = catService;
-            this.catValidator = catValidator;
-            this.catViewModelValidator = catViewModelValidator;
             this.mapper = mapper;
         }
 
@@ -33,7 +29,6 @@ namespace CatsCRUDApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var mongo = new PetsContext();
             var cats = await catService.Get();
 
             var catsViewModels = mapper.Map<IEnumerable<Cat>, IEnumerable<CatViewModel>>(cats);
@@ -47,7 +42,10 @@ namespace CatsCRUDApp.Controllers
         {
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
-           //Fluent from ModelState.IsValid
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.Values);
+            }
 
             await catService.Create(cat);
 
@@ -60,11 +58,9 @@ namespace CatsCRUDApp.Controllers
         {
             var cat = mapper.Map<CatViewModel, Cat>(model);
 
-            var result = catValidator.Validate(cat);
-
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(result.ToString());
+                return BadRequest(ModelState.Values);
             }
 
             await catService.Update(cat);
@@ -78,11 +74,9 @@ namespace CatsCRUDApp.Controllers
         {
             var cat = mapper.Map<CatViewModel, Cat>(model);
              
-            var result = catValidator.Validate(cat);
-
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(result.ToString());
+                return BadRequest(ModelState.Values);
             }
 
             var existingCat = await catService.GetCatById(cat);

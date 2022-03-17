@@ -17,7 +17,7 @@ namespace DAL.Finders
             redisConfiguration = new RedisEndpoint() { Host = "localhost", Port = 6379 };
         }
 
-        public override Task<Cat> GetById(Cat item)
+        public override Task<Cat>? GetById(Cat item)
         {
             string cacheKey = $"{item.Id}{item.Name}";
             Cat? data;

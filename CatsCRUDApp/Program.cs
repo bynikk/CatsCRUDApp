@@ -1,6 +1,7 @@
 using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Services;
+using CatsCRUDApp;
 using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
 using DAL.EF;
@@ -25,6 +26,8 @@ builder.Services.AddScoped<IRepository<Dog>, DogRepository>();
 
 builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
+
+builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 
 builder.Services.AddScoped<IPetsContext, PetsContext>();
 

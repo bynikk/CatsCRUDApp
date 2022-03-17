@@ -1,16 +1,13 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using ServiceStack;
 using ServiceStack.Redis;
 
 namespace DAL.Finders
 {
     public class CatFinder
     {
-        private IConfiguration configuration;
         private IPetsContext context;
         private readonly RedisEndpoint redisConfiguration;
         private readonly TimeSpan expirationTime;
@@ -21,10 +18,12 @@ namespace DAL.Finders
             expirationTime = TimeSpan.FromSeconds(300);
         }
 
-        public async virtual Task<Cat> GetById(Cat cat)
+        public async virtual Task<Cat>? GetById(Cat cat)
         {
             var filter = Builders<Cat>.Filter.Eq("Id", cat.Id);
             var existing = await context.Cats.Find(filter).FirstOrDefaultAsync();
+
+            if (existing == null) return existing;
 
             string cacheKey = string.Format(existing.Id.ToString(), existing.Name);
             using (IRedisClient client = new RedisClient(redisConfiguration))
