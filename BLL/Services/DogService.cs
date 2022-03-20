@@ -34,9 +34,9 @@ namespace BLL.Services
             return dogRepository.Delete(dog);
         }
 
-        public Task<Dog> GetCatById(Dog dog)
+        public Task<Dog> GetCatById(int DogId)
         {
-            return dogFinder.GetById(dog);
+            return dogFinder.GetById(DogId);
         }
     }
 }

@@ -4,6 +4,7 @@ using BLL.Services;
 using CatsCRUDApp;
 using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
+using DAL;
 using DAL.EF;
 using DAL.Finders;
 using DAL.MongoDb;
@@ -18,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
-builder.Services.AddScoped<IRepository<Cat>, CatRepository>();
+builder.Services.AddScoped<IRepository<Cat>, CatRepositoryCache>();
 
 builder.Services.AddScoped<IDogService, DogService>();
 builder.Services.AddScoped<IFinder<Dog>, DogFinder>();
@@ -26,6 +27,8 @@ builder.Services.AddScoped<IRepository<Dog>, DogRepository>();
 
 builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
+
+builder.Services.AddScoped<IRedisConfiguration, RedisConfiguration>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 

@@ -36,9 +36,9 @@ namespace BLL.Services
             return catRepository.Delete(cat);
         }
 
-        public Task<Cat> GetCatById(Cat cat)
+        public Task<Cat> GetCatById(int catId)
         {
-            return catFinder.GetById(cat);
+            return catFinder.GetById(catId);
         }
     }
 }
