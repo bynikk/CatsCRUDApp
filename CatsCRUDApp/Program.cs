@@ -19,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
-builder.Services.AddScoped<IRepository<Cat>, CatRepository>();
+builder.Services.AddScoped<IRepository<Cat>, CatRepositoryCache>();
 
 builder.Services.AddScoped<IDogService, DogService>();
 builder.Services.AddScoped<IFinder<Dog>, DogFinder>();

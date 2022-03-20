@@ -22,24 +22,27 @@ namespace DAL.Repositories
 
         public override Task Delete(Cat item)
         {
-            using (IRedisClient client = new RedisClient(redisEndpoint))
-            {
-                client.Delete<Cat>(item);
-            }
+            using IRedisClient client = new RedisClient(redisEndpoint);
+            client.Delete<Cat>(item);
 
             return base.Delete(item);
         }
 
         public override Task Update(Cat item)
         {
-            var filter = Builders<Cat>.Filter.Eq("Id", item.Id);
-            var cat = context.Cats.Find(filter).FirstOrDefaultAsync().GetAwaiter().GetResult();
+            using IRedisClient client = new RedisClient(redisEndpoint);
+            var cacheKey = item.Id.ToString();
+
+            var cat = client.Get<Cat>(cacheKey);
+            if (cat == null)
+            {
+                var filter = Builders<Cat>.Filter.Eq("Id", item.Id);
+                cat = context.Cats.Find(filter).FirstOrDefaultAsync().GetAwaiter().GetResult();
+            }
 
             if (cat == null) throw new ArgumentNullException();
 
-            using IRedisClient client = new RedisClient(redisEndpoint);
             client.Delete<Cat>(cat);
-            var cacheKey = item.Id.ToString(); 
             client.Set(cacheKey, item, redisConfiguration.expirationTime);
 
             return base.Update(item);
