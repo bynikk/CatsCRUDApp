@@ -7,28 +7,26 @@ namespace DAL.Finders
 {
     public class CatFinderCache : CatFinder, IFinder<Cat>
     {
-        private readonly RedisEndpoint redisEndpoint;
-        IRedisConfiguration redisConfiguration;
+        ICacheService<Cat> cacheService;
 
-        public CatFinderCache(IPetsContext context, IRedisConfiguration configuration) : base(context, configuration)
+        public CatFinderCache(IPetsContext context, ICacheService<Cat> cacheService) : base(context)
         {
-            redisConfiguration = configuration;
-            redisEndpoint = new RedisEndpoint() { Host = redisConfiguration.Host, Port = redisConfiguration.Port };
+            this.cacheService = cacheService;
         }
 
         public override Task<Cat>? GetById(int catId)
         {
-            string cacheKey = $"{catId}";
             Cat? data;
-            using (IRedisClient client = new RedisClient(redisEndpoint))
-            {
-                data = client.Get<Cat>(cacheKey);
-            }
+            data = cacheService.Get(catId);
 
             if (data != null)
                 return data.AsTaskResult();
             
-            return base.GetById(catId);
+            var cat = base.GetById(catId);
+            if (cat == null) throw new ArgumentNullException(nameof(cat));
+
+            cacheService.Add(catId, cat.GetAwaiter().GetResult());
+            return cat;
           
         }
     }

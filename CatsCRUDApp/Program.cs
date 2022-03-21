@@ -5,6 +5,7 @@ using CatsCRUDApp;
 using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
 using DAL;
+using DAL.CacheAllocation;
 using DAL.EF;
 using DAL.Finders;
 using DAL.MongoDb;
@@ -29,6 +30,8 @@ builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
 
 builder.Services.AddScoped<IRedisConfiguration, RedisConfiguration>();
+
+builder.Services.AddSingleton<ICacheService<Cat>, CacheService>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 
