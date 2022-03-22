@@ -8,9 +8,9 @@ namespace DAL.Repositories
     public class CatRepositoryCache : CatRepository
     {
         IPetsContext context;
-        ICacheService<Cat> cacheService;
+        ICache<Cat> cacheService;
 
-        public CatRepositoryCache(IPetsContext context, ICacheService<Cat> cacheService) : base(context)
+        public CatRepositoryCache(IPetsContext context, ICache<Cat> cacheService) : base(context)
         {
             this.context = context;
             this.cacheService = cacheService;

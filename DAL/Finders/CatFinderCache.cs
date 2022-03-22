@@ -7,9 +7,9 @@ namespace DAL.Finders
 {
     public class CatFinderCache : CatFinder, IFinder<Cat>
     {
-        ICacheService<Cat> cacheService;
+        ICache<Cat> cacheService;
 
-        public CatFinderCache(IPetsContext context, ICacheService<Cat> cacheService) : base(context)
+        public CatFinderCache(IPetsContext context, ICache<Cat> cacheService) : base(context)
         {
             this.cacheService = cacheService;
         }

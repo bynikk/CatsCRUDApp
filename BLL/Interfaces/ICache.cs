@@ -1,6 +1,6 @@
 ﻿namespace BLL.Interfaces
 {
-    public interface ICacheService<T> where T : class
+    public interface ICache<T> where T : class
     {
         public void Add(int key, T value);
 

@@ -3,11 +3,11 @@ using BLL.Interfaces;
 
 namespace DAL.CacheAllocation
 {
-    public class CacheService : ICacheService<Cat>
+    public class Cache : ICache<Cat>
     {
         private Dictionary<int, WeakReference> cacheDictionary;
 
-        public CacheService()
+        public Cache()
         {
             cacheDictionary = new ();
         }

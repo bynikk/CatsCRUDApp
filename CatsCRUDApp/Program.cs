@@ -31,7 +31,7 @@ builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
 
 builder.Services.AddScoped<IRedisConfiguration, RedisConfiguration>();
 
-builder.Services.AddSingleton<ICacheService<Cat>, CacheService>();
+builder.Services.AddSingleton<ICache<Cat>, Cache>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 
