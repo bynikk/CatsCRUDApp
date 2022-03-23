@@ -10,7 +10,7 @@ namespace DAL.CacheAllocation
 
         ConnectionMultiplexer connectionMultiplexer;
         IDatabase redisDb;
-        string streamName = "cacheCat";
+        string streamName = "telemetry";
 
         public Cache()
         {
@@ -21,10 +21,10 @@ namespace DAL.CacheAllocation
         public void Set(int key, Cat item)
         {
             cacheDictionary.Add(key, new WeakReference(item));
-
             redisDb.StreamAdd(streamName, new NameValueEntry[] {
                 new NameValueEntry("id", item.Id),
                 new NameValueEntry("name", item.Name),
+                new NameValueEntry("date", item.CreatedDate.ToString()),
             });
         }
 

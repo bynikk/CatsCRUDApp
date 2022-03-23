@@ -13,6 +13,8 @@ using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,5 +74,68 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var tokenSource = new CancellationTokenSource();
+var token = tokenSource.Token;
+var muxer = ConnectionMultiplexer.Connect("localhost:6379");
+var db = muxer.GetDatabase();
+
+const string streamName = "telemetry";
+const string groupName = "avg";
+
+if (!(await db.KeyExistsAsync(streamName)) || (await db.StreamGroupInfoAsync(streamName)).All(x => x.Name != groupName))
+{
+    await db.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
+}
+
+//var producerTask = Task.Run(async () =>
+//{
+//    var random = new Random();
+//    while (!token.IsCancellationRequested)
+//    {
+//        await db.StreamAddAsync(streamName,
+//            new NameValueEntry[]
+//                {new("temp", random.Next(50, 65)), new NameValueEntry("time", DateTimeOffset.Now.ToUnixTimeSeconds())});
+//        await Task.Delay(2000);
+//    }
+//});
+
+Dictionary<string, string> ParseResult(StreamEntry entry) => entry.Values.ToDictionary(x => x.Name.ToString(), x => x.Value.ToString());
+
+var readTask = Task.Run(async () =>
+{
+    string buff = string.Empty;
+
+    while (!token.IsCancellationRequested)
+    {
+        var result = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
+
+        if (result.Any())
+        {
+            //var a = db.StreamInfo(streamName).LastEntry;
+
+            //var sb = new StringBuilder();
+            //foreach (var value in a.Values)
+            //{
+            //    sb.Append(value.Value);
+            //}
+
+            // При изменении сразу более одного элемента остаётся только последний.
+            var dict = ParseResult(result.Last());
+            var sb = new StringBuilder();
+            foreach (var key in dict.Keys)
+            {
+                sb.Append(dict[key]);
+            }
+
+            if (!string.Equals(buff, sb.ToString(), StringComparison.InvariantCultureIgnoreCase))
+            {
+                Console.WriteLine(buff = sb.ToString());
+            }
+        }
+
+        await Task.Delay(10000);
+    }
+}); 
 
 app.Run();
