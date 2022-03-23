@@ -8,32 +8,26 @@ namespace DAL.Repositories
     public class CatRepositoryCache : CatRepository
     {
         IPetsContext context;
-        private readonly RedisEndpoint redisEndpoint;
-        IRedisConfiguration redisConfiguration;
+        ICache<Cat> cacheService;
 
-
-        public CatRepositoryCache(IPetsContext context, IRedisConfiguration configuration) : base(context)
+        public CatRepositoryCache(IPetsContext context, ICache<Cat> cacheService) : base(context)
         {
             this.context = context;
-            redisEndpoint = new RedisEndpoint() { Host = configuration.Host, Port = configuration.Port };
-            redisConfiguration = configuration;
-
+            this.cacheService = cacheService;
         }
 
         public override Task Delete(Cat item)
         {
-            using IRedisClient client = new RedisClient(redisEndpoint);
-            client.Delete<Cat>(item);
+            cacheService.Delete(item.Id);
 
             return base.Delete(item);
         }
 
         public override Task Update(Cat item)
         {
-            using IRedisClient client = new RedisClient(redisEndpoint);
-            var cacheKey = item.Id.ToString();
+            int cacheKey = item.Id;
+            Cat cat = cacheService.Get(cacheKey);
 
-            var cat = client.Get<Cat>(cacheKey);
             if (cat == null)
             {
                 var filter = Builders<Cat>.Filter.Eq("Id", item.Id);
@@ -42,8 +36,8 @@ namespace DAL.Repositories
 
             if (cat == null) throw new ArgumentNullException();
 
-            client.Delete<Cat>(cat);
-            client.Set(cacheKey, item, redisConfiguration.expirationTime);
+            cacheService.Delete(cacheKey);
+            cacheService.Add(cacheKey, item);
 
             return base.Update(item);
         }
