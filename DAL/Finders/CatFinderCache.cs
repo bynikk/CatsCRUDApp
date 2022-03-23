@@ -9,7 +9,9 @@ namespace DAL.Finders
     {
         ICache<Cat> cacheService;
 
-        public CatFinderCache(IPetsContext context, ICache<Cat> cacheService) : base(context)
+        public CatFinderCache(
+            IPetsContext context,
+            ICache<Cat> cacheService) : base(context)
         {
             this.cacheService = cacheService;
         }
@@ -25,7 +27,8 @@ namespace DAL.Finders
             var cat = base.GetById(catId);
             if (cat == null) throw new ArgumentNullException(nameof(cat));
 
-            cacheService.Add(catId, cat.GetAwaiter().GetResult());
+            var resultCat = cat.GetAwaiter().GetResult();
+            cacheService.Set(catId, resultCat);
             return cat;
           
         }

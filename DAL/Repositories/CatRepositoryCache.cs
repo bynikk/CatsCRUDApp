@@ -8,17 +8,19 @@ namespace DAL.Repositories
     public class CatRepositoryCache : CatRepository
     {
         IPetsContext context;
-        ICache<Cat> cacheService;
+        ICache<Cat> cache;
 
-        public CatRepositoryCache(IPetsContext context, ICache<Cat> cacheService) : base(context)
+        public CatRepositoryCache(
+            IPetsContext context,
+            ICache<Cat> cacheService) : base(context)
         {
             this.context = context;
-            this.cacheService = cacheService;
+            this.cache = cacheService;
         }
 
         public override Task Delete(Cat item)
         {
-            cacheService.Delete(item.Id);
+            cache.Delete(item.Id);
 
             return base.Delete(item);
         }
@@ -26,7 +28,7 @@ namespace DAL.Repositories
         public override Task Update(Cat item)
         {
             int cacheKey = item.Id;
-            Cat cat = cacheService.Get(cacheKey);
+            Cat cat = cache.Get(cacheKey);
 
             if (cat == null)
             {
@@ -36,8 +38,8 @@ namespace DAL.Repositories
 
             if (cat == null) throw new ArgumentNullException();
 
-            cacheService.Delete(cacheKey);
-            cacheService.Add(cacheKey, item);
+            cache.Delete(cacheKey);
+            cache.Set(cacheKey, item);
 
             return base.Update(item);
         }
