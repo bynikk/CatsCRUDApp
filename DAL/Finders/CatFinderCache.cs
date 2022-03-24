@@ -28,7 +28,7 @@ namespace DAL.Finders
             if (cat == null) throw new ArgumentNullException(nameof(cat));
 
             var resultCat = cat.GetAwaiter().GetResult();
-            cacheService.Set(catId, resultCat);
+            cacheService.Set(resultCat);
             return cat;
           
         }

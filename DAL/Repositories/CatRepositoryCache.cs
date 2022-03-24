@@ -1,7 +1,6 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using MongoDB.Driver;
-using ServiceStack.Redis;
 
 namespace DAL.Repositories
 {
@@ -39,7 +38,7 @@ namespace DAL.Repositories
             if (cat == null) throw new ArgumentNullException();
 
             cache.Delete(cacheKey);
-            cache.Set(cacheKey, item);
+            cache.Set(item);
 
             return base.Update(item);
         }
