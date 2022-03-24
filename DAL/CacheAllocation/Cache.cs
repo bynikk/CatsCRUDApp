@@ -34,17 +34,34 @@ namespace DAL.CacheAllocation
         }
 
         Dictionary<string, string> ParseResult(StreamEntry entry) => entry.Values.ToDictionary(x => x.Name.ToString(), x => x.Value.ToString());
+        Cat ParseResult(NameValueEntry[] values)
+        {
+            var cat = new Cat();
+            switch (values.Length)
+            {
+                case 4:
+                    cat = new Cat
+                    {
+                        Id = Convert.ToInt32(values[1].Value),
+                        Name = values[2].Value,
+                        CreatedDate = Convert.ToDateTime(values[3].Value),
+                    };
+
+                    break;
+                case 2:
+                    cat = new Cat
+                    {
+                        Id = Convert.ToInt32(values[1].Value),
+                    };
+                    break;
+            }
+            return cat;
+        }
 
         public void Set(Cat item)
         {
-            cacheDictionary.Add(item.Id, new WeakReference(item));
-
             db.StreamAdd(streamName, new NameValueEntry[] {
                 new NameValueEntry("command", "insert"),
-                new NameValueEntry("id", item.Id),
-            });
-
-            db.StreamAdd(streamName, new NameValueEntry[] {
                 new NameValueEntry("id", item.Id),
                 new NameValueEntry("name", item.Name),
                 new NameValueEntry("date", item.CreatedDate.ToString()),
@@ -67,12 +84,10 @@ namespace DAL.CacheAllocation
             db.StreamAdd(streamName, new NameValueEntry[] {
                 new NameValueEntry("command", "delete"),
                 new NameValueEntry("id", key),
+
             });
 
             if (!result.IsNull) db.StreamDelete(streamName, new RedisValue[] { result.Id });
-
-
-            cacheDictionary.Remove(key);
         }
 
         public async void ListenTask()
@@ -84,22 +99,25 @@ namespace DAL.CacheAllocation
             {
                 while (!Token.IsCancellationRequested)
                 {
-                    var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 3);
+                    var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
 
-                    //var res = await db.StreamReadAsync(streamName, "$", 1);
-
-                    //if (result.Any())
                     if (result.Any() && lowestHandledId != result.Last().Id)
                     {
-                        var dict = ParseResult(result.Last());
-                        var sb = new StringBuilder();
-                        foreach (var key in dict.Keys)
-                        {
-                            sb.Append(dict[key]);
-                        }
-
-                        Console.WriteLine(sb.ToString());
                         lowestHandledId = result.Last().Id;
+
+                        var streamCat = result.Last().Values;
+                        Cat cat = ParseResult(streamCat);
+                        switch (streamCat[0].Value.ToString())
+                        {
+                            case "insert":
+                                Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
+                                cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                                break;
+                            case "delete":
+                                Console.WriteLine($"Deleted cat at id:{cat.Id}");
+                                cacheDictionary.Remove(cat.Id);
+                                break;
+                        }
 
                     }
 
