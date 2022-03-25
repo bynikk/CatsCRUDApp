@@ -1,12 +1,8 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
-using RedLockNet;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
-using System.Configuration;
-using System.Net;
-using System.Text;
 
 namespace DAL.CacheAllocation
 {
@@ -17,20 +13,32 @@ namespace DAL.CacheAllocation
         CancellationTokenSource TokenSource;
         CancellationToken Token;
         ConnectionMultiplexer connectionMultiplexer;
+        List<RedLockMultiplexer> multiplexers;
 
+        RedLockFactory redlockFactory;
         IDatabase db;
+
+        TimeSpan expiry = TimeSpan.FromSeconds(30);
+        TimeSpan wait = TimeSpan.FromSeconds(10);
+        TimeSpan retry = TimeSpan.FromSeconds(1);
 
         const string streamName = "telemetry";
         const string groupName = "avg";
 
         public Cache()
         {
+            this.db = connectionMultiplexer.GetDatabase();
+
             cacheDictionary = new ();
             connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
-            this.db = connectionMultiplexer.GetDatabase();
 
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
+
+            multiplexers = new List<RedLockMultiplexer>
+            {
+                connectionMultiplexer,
+            };
 
             if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
             {
@@ -38,7 +46,6 @@ namespace DAL.CacheAllocation
             }
         }
 
-        Dictionary<string, string> ParseResult(StreamEntry entry) => entry.Values.ToDictionary(x => x.Name.ToString(), x => x.Value.ToString());
         Cat ParseResult(NameValueEntry[] values)
         {
             var cat = new Cat();
@@ -97,7 +104,8 @@ namespace DAL.CacheAllocation
 
         public async void ListenTask()
         {
-            RedisValue token = Environment.MachineName;
+            redlockFactory = RedLockFactory.Create(multiplexers);
+
             var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
             var lowestHandledId = handledResult.Last().Id;
 
@@ -105,19 +113,18 @@ namespace DAL.CacheAllocation
             {
                 while (!Token.IsCancellationRequested)
                 {
-                    var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
-
-                    if (result.Any() && lowestHandledId != result.Last().Id)
+                    await using (var redLock = await redlockFactory.CreateLockAsync(streamName, expiry, wait, retry))
                     {
-                        if (db.LockTake(streamName, token, TimeSpan.FromSeconds(1)))
+                        if (redLock.IsAcquired)
                         {
-                            try
+                            var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
+                            if (result.Any() && lowestHandledId != result.Last().Id)
                             {
-                                // lock
                                 lowestHandledId = result.Last().Id;
 
                                 var streamCat = result.Last().Values;
                                 Cat cat = ParseResult(streamCat);
+
                                 switch (streamCat[0].Value.ToString())
                                 {
                                     case "insert":
@@ -130,16 +137,10 @@ namespace DAL.CacheAllocation
                                         break;
                                 }
                             }
-                            finally
-                            {
-                                db.LockRelease(streamName, token);
-                            }
+
+                            await Task.Delay(100);
                         }
-
-                        await Task.Delay(1000);
-
                     }
-
                 }
             });
         }
