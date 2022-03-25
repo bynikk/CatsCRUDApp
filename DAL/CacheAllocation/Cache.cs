@@ -1,6 +1,11 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
+using RedLockNet;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
+using System.Configuration;
+using System.Net;
 using System.Text;
 
 namespace DAL.CacheAllocation
@@ -92,6 +97,7 @@ namespace DAL.CacheAllocation
 
         public async void ListenTask()
         {
+            RedisValue token = Environment.MachineName;
             var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
             var lowestHandledId = handledResult.Last().Id;
 
@@ -103,25 +109,37 @@ namespace DAL.CacheAllocation
 
                     if (result.Any() && lowestHandledId != result.Last().Id)
                     {
-                        lowestHandledId = result.Last().Id;
-
-                        var streamCat = result.Last().Values;
-                        Cat cat = ParseResult(streamCat);
-                        switch (streamCat[0].Value.ToString())
+                        if (db.LockTake(streamName, token, TimeSpan.FromSeconds(1)))
                         {
-                            case "insert":
-                                Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
-                                cacheDictionary.Add(cat.Id, new WeakReference(cat));
-                                break;
-                            case "delete":
-                                Console.WriteLine($"Deleted cat at id:{cat.Id}");
-                                cacheDictionary.Remove(cat.Id);
-                                break;
+                            try
+                            {
+                                // lock
+                                lowestHandledId = result.Last().Id;
+
+                                var streamCat = result.Last().Values;
+                                Cat cat = ParseResult(streamCat);
+                                switch (streamCat[0].Value.ToString())
+                                {
+                                    case "insert":
+                                        Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
+                                        cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                                        break;
+                                    case "delete":
+                                        Console.WriteLine($"Deleted cat at id:{cat.Id}");
+                                        cacheDictionary.Remove(cat.Id);
+                                        break;
+                                }
+                            }
+                            finally
+                            {
+                                db.LockRelease(streamName, token);
+                            }
                         }
+
+                        await Task.Delay(1000);
 
                     }
 
-                    await Task.Delay(1000);
                 }
             });
         }
