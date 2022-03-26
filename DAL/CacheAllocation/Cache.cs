@@ -1,7 +1,5 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
-using RedLockNet.SERedis;
-using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
 
 namespace DAL.CacheAllocation
@@ -13,32 +11,23 @@ namespace DAL.CacheAllocation
         CancellationTokenSource TokenSource;
         CancellationToken Token;
         ConnectionMultiplexer connectionMultiplexer;
-        List<RedLockMultiplexer> multiplexers;
 
-        RedLockFactory redlockFactory;
         IDatabase db;
 
         TimeSpan expiry = TimeSpan.FromSeconds(30);
-        TimeSpan wait = TimeSpan.FromSeconds(10);
-        TimeSpan retry = TimeSpan.FromSeconds(1);
 
         const string streamName = "telemetry";
         const string groupName = "avg";
 
         public Cache()
         {
-            this.db = connectionMultiplexer.GetDatabase();
 
             cacheDictionary = new ();
             connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
+            this.db = connectionMultiplexer.GetDatabase();
 
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
-
-            multiplexers = new List<RedLockMultiplexer>
-            {
-                connectionMultiplexer,
-            };
 
             if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
             {
@@ -46,7 +35,7 @@ namespace DAL.CacheAllocation
             }
         }
 
-        Cat ParseResult(NameValueEntry[] values)
+        private Cat ParseResult(NameValueEntry[] values)
         {
             var cat = new Cat();
             switch (values.Length)
@@ -104,43 +93,43 @@ namespace DAL.CacheAllocation
 
         public async void ListenTask()
         {
-            redlockFactory = RedLockFactory.Create(multiplexers);
-
             var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
             var lowestHandledId = handledResult.Last().Id;
+
+            RedisValue token = Environment.MachineName;
 
             var readTask = Task.Run(async () =>
             {
                 while (!Token.IsCancellationRequested)
                 {
-                    await using (var redLock = await redlockFactory.CreateLockAsync(streamName, expiry, wait, retry))
+                    var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
+                    var handleResult = result.Last();
+
+                    if (result.Any() && lowestHandledId != handleResult.Id)
                     {
-                        if (redLock.IsAcquired)
+                        if (!db.LockTake(streamName, token, expiry))
                         {
-                            var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
-                            if (result.Any() && lowestHandledId != result.Last().Id)
+                            lowestHandledId = handleResult.Id;
+
+                            var streamCat = handleResult.Values;
+                            Cat cat = ParseResult(streamCat);
+
+                            switch (streamCat[0].Value.ToString())
                             {
-                                lowestHandledId = result.Last().Id;
-
-                                var streamCat = result.Last().Values;
-                                Cat cat = ParseResult(streamCat);
-
-                                switch (streamCat[0].Value.ToString())
-                                {
-                                    case "insert":
-                                        Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
-                                        cacheDictionary.Add(cat.Id, new WeakReference(cat));
-                                        break;
-                                    case "delete":
-                                        Console.WriteLine($"Deleted cat at id:{cat.Id}");
-                                        cacheDictionary.Remove(cat.Id);
-                                        break;
-                                }
+                                case "insert":
+                                    Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
+                                    cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                                    break;
+                                case "delete":
+                                    Console.WriteLine($"Deleted cat at id:{cat.Id}");
+                                    cacheDictionary.Remove(cat.Id);
+                                    break;
                             }
-
-                            await Task.Delay(100);
+                            db.LockRelease(streamName, token);
                         }
                     }
+                    await Task.Delay(100);
+
                 }
             });
         }
