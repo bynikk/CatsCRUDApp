@@ -71,11 +71,18 @@ namespace DAL.CacheAllocation
 
         public Cat? Get(int key)
         { 
-            if (cacheDictionary.ContainsKey(key) && cacheDictionary[key].IsAlive)
+            if (!cacheDictionary.ContainsKey(key))
             {
-                return cacheDictionary[key].Target as Cat;
+                return null;
             }
-            return null;
+
+            if (!cacheDictionary[key].IsAlive)
+            {
+                Delete(key);
+                return null;
+            }
+
+            return cacheDictionary[key].Target as Cat;            
         }
 
         public void Delete(int key)
@@ -98,14 +105,14 @@ namespace DAL.CacheAllocation
 
             RedisValue token = Environment.MachineName;
 
-            var readTask = Task.Run(async () =>
+            while (!Token.IsCancellationRequested)
             {
-                while (!Token.IsCancellationRequested)
-                {
-                    var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
-                    var handleResult = result.Last();
+                var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
+                var handleResult = result.Last();
 
-                    if (result.Any() && lowestHandledId != handleResult.Id)
+                if (result.Any() && lowestHandledId != handleResult.Id)
+                {
+                    try
                     {
                         if (!db.LockTake(streamName, token, expiry))
                         {
@@ -125,13 +132,14 @@ namespace DAL.CacheAllocation
                                     cacheDictionary.Remove(cat.Id);
                                     break;
                             }
-                            db.LockRelease(streamName, token);
                         }
                     }
-                    await Task.Delay(100);
-
+                    finally
+                    {
+                        db.LockRelease(streamName, token);
+                    }                
                 }
-            });
+            }
         }
     }
 }
