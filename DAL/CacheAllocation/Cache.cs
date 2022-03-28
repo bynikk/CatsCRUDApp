@@ -112,7 +112,7 @@ namespace DAL.CacheAllocation
 
                 if (result.Any() && lowestHandledId != handleResult.Id)
                 {
-                    lock (db)
+                    lock(db)
                     {
                         lowestHandledId = handleResult.Id;
 
