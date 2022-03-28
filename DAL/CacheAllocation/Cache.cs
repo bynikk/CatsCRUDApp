@@ -112,32 +112,25 @@ namespace DAL.CacheAllocation
 
                 if (result.Any() && lowestHandledId != handleResult.Id)
                 {
-                    try
+                    lock (db)
                     {
-                        if (!db.LockTake(streamName, token, expiry))
+                        lowestHandledId = handleResult.Id;
+
+                        var streamCat = handleResult.Values;
+                        Cat cat = ParseResult(streamCat);
+
+                        switch (streamCat[0].Value.ToString())
                         {
-                            lowestHandledId = handleResult.Id;
-
-                            var streamCat = handleResult.Values;
-                            Cat cat = ParseResult(streamCat);
-
-                            switch (streamCat[0].Value.ToString())
-                            {
-                                case CommandTypes.Insert:
-                                    Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
-                                    cacheDictionary.Add(cat.Id, new WeakReference(cat));
-                                    break;
-                                case CommandTypes.Delete:
-                                    Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
-                                    cacheDictionary.Remove(cat.Id);
-                                    break;
-                            }
+                            case CommandTypes.Insert:
+                                Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+                                cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                                break;
+                            case CommandTypes.Delete:
+                                Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
+                                cacheDictionary.Remove(cat.Id);
+                                break;
                         }
                     }
-                    finally
-                    {
-                        db.LockRelease(streamName, token);
-                    }                
                 }
             }
         }
