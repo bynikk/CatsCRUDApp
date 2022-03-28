@@ -62,10 +62,10 @@ namespace DAL.CacheAllocation
         public void Set(Cat item)
         {
             db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry("command", "insert"),
-                new NameValueEntry("id", item.Id),
-                new NameValueEntry("name", item.Name),
-                new NameValueEntry("date", item.CreatedDate.ToString()),
+                new NameValueEntry(FieldNames.Command, CommandTypes.Insert),
+                new NameValueEntry(FieldNames.Id, item.Id),
+                new NameValueEntry(FieldNames.Name, item.Name),
+                new NameValueEntry(FieldNames.CreationDate, item.CreatedDate.ToString()),
             });
         }
 
@@ -90,8 +90,8 @@ namespace DAL.CacheAllocation
             var result = db.StreamRange(streamName, "-", "+").FirstOrDefault(c => c.Values[0].Value == key);
 
             db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry("command", "delete"),
-                new NameValueEntry("id", key),
+                new NameValueEntry(FieldNames.Command, CommandTypes.Delete),
+                new NameValueEntry(FieldNames.Id, key),
 
             });
 
@@ -123,12 +123,12 @@ namespace DAL.CacheAllocation
 
                             switch (streamCat[0].Value.ToString())
                             {
-                                case "insert":
-                                    Console.WriteLine($"Insert cat at id:{cat.Id} [{cat.Name} - {cat.CreatedDate}]");
+                                case CommandTypes.Insert:
+                                    Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
                                     cacheDictionary.Add(cat.Id, new WeakReference(cat));
                                     break;
-                                case "delete":
-                                    Console.WriteLine($"Deleted cat at id:{cat.Id}");
+                                case CommandTypes.Delete:
+                                    Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
                                     cacheDictionary.Remove(cat.Id);
                                     break;
                             }
