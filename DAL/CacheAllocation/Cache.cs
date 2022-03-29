@@ -14,6 +14,7 @@ namespace DAL.CacheAllocation
         ConnectionMultiplexer connectionMultiplexer;
 
         IDatabase db;
+        Channel<NameValueEntry[]> channel;
 
         TimeSpan expiry = TimeSpan.FromSeconds(30);
 
@@ -29,6 +30,8 @@ namespace DAL.CacheAllocation
 
             tokenSource = new CancellationTokenSource();
             Token = tokenSource.Token;
+
+            channel = Channel.CreateUnbounded<NameValueEntry[]>();
 
             if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
             {
@@ -99,7 +102,7 @@ namespace DAL.CacheAllocation
             if (!result.IsNull) db.StreamDelete(streamName, new RedisValue[] { result.Id });
         }
 
-        public async void ListenTask()
+        public async void ListenRedisTask()
         {
             var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
             var lowestHandledId = handledResult.Last().Id;
@@ -113,28 +116,38 @@ namespace DAL.CacheAllocation
 
                 if (result.Any() && lowestHandledId != handleResult.Id)
                 {
-                    lock(cacheDictionary)
+                    lock (cacheDictionary)
                     {
                         lowestHandledId = handleResult.Id;
 
                         var streamCat = handleResult.Values;
-                        Cat cat = ParseResult(streamCat);
+                        channel.Writer.WriteAsync(streamCat);
+                    }
+                }
+                
+            }
+            
+        }
 
-                        switch (streamCat[0].Value.ToString())
-                        {
-                            case CommandTypes.Insert:
-                                Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+        public async void ListenChannelTask()
+        {
+            while (!Token.IsCancellationRequested)
+            {
+                if (await channel.Reader.WaitToReadAsync())
+                {
+                    var streamCat = await channel.Reader.ReadAsync();
 
-                                cacheDictionary.Add(cat.Id, new WeakReference(cat));
-
-                                break;
-                            case CommandTypes.Delete:
-                                Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
-
-                                cacheDictionary.Remove(cat.Id);
-
-                                break;
-                        }
+                    Cat cat = ParseResult(streamCat);
+                    switch (streamCat[0].Value.ToString())
+                    {
+                        case CommandTypes.Insert:
+                            Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+                            cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                            break;
+                        case CommandTypes.Delete:
+                            Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
+                            cacheDictionary.Remove(cat.Id);
+                            break;
                     }
                 }
             }

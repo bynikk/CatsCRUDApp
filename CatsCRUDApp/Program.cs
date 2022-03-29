@@ -76,6 +76,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 var cache = new Cache();
-cache.ListenTask();
+cache.ListenRedisTask();
+cache.ListenChannelTask();
 
 app.Run();
