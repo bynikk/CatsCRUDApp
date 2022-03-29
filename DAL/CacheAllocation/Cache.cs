@@ -1,6 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using StackExchange.Redis;
+using System.Threading.Channels;
 
 namespace DAL.CacheAllocation
 {
@@ -8,7 +9,7 @@ namespace DAL.CacheAllocation
     {
         private Dictionary<int, WeakReference> cacheDictionary;
 
-        CancellationTokenSource TokenSource;
+        CancellationTokenSource tokenSource;
         CancellationToken Token;
         ConnectionMultiplexer connectionMultiplexer;
 
@@ -26,8 +27,8 @@ namespace DAL.CacheAllocation
             connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
             this.db = connectionMultiplexer.GetDatabase();
 
-            TokenSource = new CancellationTokenSource();
-            Token = TokenSource.Token;
+            tokenSource = new CancellationTokenSource();
+            Token = tokenSource.Token;
 
             if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
             {
@@ -103,7 +104,7 @@ namespace DAL.CacheAllocation
             var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
             var lowestHandledId = handledResult.Last().Id;
 
-            RedisValue token = Environment.MachineName;
+            var token = Environment.MachineName;
 
             while (!Token.IsCancellationRequested)
             {
@@ -112,7 +113,7 @@ namespace DAL.CacheAllocation
 
                 if (result.Any() && lowestHandledId != handleResult.Id)
                 {
-                    lock(db)
+                    lock(cacheDictionary)
                     {
                         lowestHandledId = handleResult.Id;
 
@@ -123,11 +124,15 @@ namespace DAL.CacheAllocation
                         {
                             case CommandTypes.Insert:
                                 Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+
                                 cacheDictionary.Add(cat.Id, new WeakReference(cat));
+
                                 break;
                             case CommandTypes.Delete:
                                 Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
+
                                 cacheDictionary.Remove(cat.Id);
+
                                 break;
                         }
                     }
