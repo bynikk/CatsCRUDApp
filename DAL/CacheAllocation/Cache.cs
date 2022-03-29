@@ -1,5 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
+using BLL.Interfaces.Cache;
+using DAL.CacheAllocation.Cosumers;
 using StackExchange.Redis;
 using System.Threading.Channels;
 
@@ -11,32 +13,24 @@ namespace DAL.CacheAllocation
 
         CancellationTokenSource tokenSource;
         CancellationToken Token;
-        ConnectionMultiplexer connectionMultiplexer;
 
-        IDatabase db;
         Channel<NameValueEntry[]> channel;
 
-        TimeSpan expiry = TimeSpan.FromSeconds(30);
+        IRedisProducer redisProducer;
+        RedisConsumer redisComsumer;
 
         const string streamName = "telemetry";
-        const string groupName = "avg";
 
-        public Cache()
+        public Cache(IRedisProducer redisProducer)
         {
-
-            cacheDictionary = new ();
-            connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
-            this.db = connectionMultiplexer.GetDatabase();
+            cacheDictionary = new();
+            this.redisProducer = redisProducer;
+            redisComsumer = new RedisConsumer();
 
             tokenSource = new CancellationTokenSource();
             Token = tokenSource.Token;
 
             channel = Channel.CreateUnbounded<NameValueEntry[]>();
-
-            if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
-            {
-                db.StreamCreateConsumerGroup(streamName, groupName, "0-0", true);
-            }
         }
 
         private Cat ParseResult(NameValueEntry[] values)
@@ -64,13 +58,8 @@ namespace DAL.CacheAllocation
         }
 
         public void Set(Cat item)
-        {
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Insert),
-                new NameValueEntry(FieldNames.Id, item.Id),
-                new NameValueEntry(FieldNames.Name, item.Name),
-                new NameValueEntry(FieldNames.CreationDate, item.CreatedDate.ToString()),
-            });
+        { 
+            redisProducer.AddInsertCommand(item);
         }
 
         public Cat? Get(int key)
@@ -91,42 +80,25 @@ namespace DAL.CacheAllocation
 
         public void Delete(int key)
         {
-            var result = db.StreamRange(streamName, "-", "+").FirstOrDefault(c => c.Values[0].Value == key);
-
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Delete),
-                new NameValueEntry(FieldNames.Id, key),
-
-            });
-
-            if (!result.IsNull) db.StreamDelete(streamName, new RedisValue[] { result.Id });
+            redisProducer.AddDeleteCommand(key);
         }
 
         public async void ListenRedisTask()
         {
-            var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
-            var lowestHandledId = handledResult.Last().Id;
-
-            var token = Environment.MachineName;
-
             while (!Token.IsCancellationRequested)
             {
-                var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
-                var handleResult = result.Last();
+                var lastHandledElement = redisComsumer.GetLastHandledElement();
 
-                if (result.Any() && lowestHandledId != handleResult.Id)
+                if (lastHandledElement != null)
                 {
-                    lock (cacheDictionary)
+                    lock (channel)
                     {
-                        lowestHandledId = handleResult.Id;
-
-                        var streamCat = handleResult.Values;
-                        channel.Writer.WriteAsync(streamCat);
+                        channel.Writer.WriteAsync(lastHandledElement);
                     }
                 }
-                
+
+                await Task.Delay(1);
             }
-            
         }
 
         public async void ListenChannelTask()
