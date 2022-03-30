@@ -1,9 +1,7 @@
-﻿using StackExchange.Redis;
-
-namespace BLL.Interfaces.Cache
+﻿namespace BLL.Interfaces.Cache
 {
     public interface IRedisConsumer
     {
-        public NameValueEntry[]? GetLastHandledElement();
+        public Dictionary<string, string>? GetLastHandledElement();
     }
 }

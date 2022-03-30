@@ -1,70 +1,41 @@
 ﻿using BLL.Interfaces.Cache;
-using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CSRedis;
 
 namespace DAL.CacheAllocation.Cosumers
 {
     public class RedisConsumer : IRedisConsumer
     {
-        ConnectionMultiplexer connectionMultiplexer;
-        IDatabase db;
-
         const string streamName = "telemetry";
 
-        RedisValue lastHandledId;
+        CSRedisClient client;
 
         public RedisConsumer()
         {
-            this.connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
-            this.db = connectionMultiplexer.GetDatabase();
-            lastHandledId = GetLastId();
+            client = new CSRedisClient("localhost:6379");
         }
 
-        private RedisValue GetLastId()
+        public Dictionary<string, string>? GetLastHandledElement()
         {
-            var handledResult = db.StreamRange(streamName, "-", "+", 1, Order.Descending);
-            return handledResult.Last().Id;
-        }
-
-        public NameValueEntry[]? GetLastHandledElement()
-        {
-            var result = db.StreamRange(streamName, lastHandledId, "+", 2);
-            if (result.Any() && lastHandledId != result.Last().Id)
+            var result = client.XRead(1, 400, new (string key, string id)[] { new(streamName, "$") });
+            if (result != null)
             {
-                lastHandledId = result.Last().Id;
-                return result.Last().Values;
+                Task.Delay(1000);
+                return parse(result[0]);
             }
+
             return null;
-
-            //var a = db.Execute("XLEN", streamName);
-
-            //if (a.IsNull)
-            //{
-            //    return null;
-            //}
-
-            //RedisResult streams;
-
-            //streams = db.Execute("XREAD", "BLOCK", "4000", "STREAMS", "telemetry", "$");
-
-            //if (streams.IsNull)
-            //{
-            //    return null;
-            //}
-
-            //// need to parse
-            //var firstLayer = (RedisResult[])streams;
-
-            //foreach (var key in streams.ToDictionary().Keys)
-            //{
-            //    _ = streams.ToDictionary()[key];
-            //}
-
-            //return new NameValueEntry[0];
         }
+
+        Func<(string key, (string id, string[] items)[] data), Dictionary<string, string>> parse = delegate ((string key, (string id, string[] items)[] data) streamResult)
+        {
+            var message = streamResult.data.First().items;
+            var result = new Dictionary<string, string>();
+            for (var i = 0; i < message.Length; i += 2)
+            {
+                result.Add(message[i], message[i + 1]);
+            }
+
+            return result;
+        };
     }
 }

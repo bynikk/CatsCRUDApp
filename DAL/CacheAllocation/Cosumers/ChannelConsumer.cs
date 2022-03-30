@@ -4,18 +4,18 @@ using System.Threading.Channels;
 
 namespace DAL.CacheAllocation.Producers
 {
-    public class ChannelConsumer : IChannelConsumer<NameValueEntry[]>
+    public class ChannelConsumer : IChannelConsumer<CatStreamModel>
     {
-        IChannelContext<NameValueEntry[]> channelContext;
-        Channel<NameValueEntry[]> channel;
+        IChannelContext<CatStreamModel> channelContext;
+        Channel<CatStreamModel> channel;
 
-        public ChannelConsumer(IChannelContext<NameValueEntry[]> channelContext)
+        public ChannelConsumer(IChannelContext<CatStreamModel> channelContext)
         {
             this.channelContext = channelContext;
             this.channel = channelContext.GetChannel();
         }
 
-        public Task<NameValueEntry[]> Read()
+        public Task<CatStreamModel> Read()
         {
             return channel.Reader.ReadAsync().AsTask();
         }

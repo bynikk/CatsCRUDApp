@@ -1,9 +1,6 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Interfaces.Cache;
-using DAL.CacheAllocation.Cosumers;
-using StackExchange.Redis;
-using System.Threading.Channels;
 
 namespace DAL.CacheAllocation
 {
@@ -17,16 +14,16 @@ namespace DAL.CacheAllocation
         IRedisProducer redisProducer;
         IRedisConsumer redisComsumer;
 
-        IChannelProducer<NameValueEntry[]> channelProducer;
-        IChannelConsumer<NameValueEntry[]> channelComsumer;
+        IChannelProducer<CatStreamModel> channelProducer;
+        IChannelConsumer<CatStreamModel> channelComsumer;
 
         const string streamName = "telemetry";
 
         public Cache(
             IRedisProducer redisProducer,
             IRedisConsumer redisConsumer,
-            IChannelProducer<NameValueEntry[]> channelProducer,
-            IChannelConsumer<NameValueEntry[]> channelComsumer)
+            IChannelProducer<CatStreamModel> channelProducer,
+            IChannelConsumer<CatStreamModel> channelComsumer)
         {
             cacheDictionary = new();
             this.redisProducer = redisProducer;
@@ -39,24 +36,26 @@ namespace DAL.CacheAllocation
             Token = tokenSource.Token;
         }
 
-        private Cat ParseResult(NameValueEntry[] values)
+        private CatStreamModel ParseResult(Dictionary<string, string> dict)
         {
-            var cat = new Cat();
-            switch (values.Length)
+            var cat = new CatStreamModel();
+            switch (dict.Count)
             {
                 case 4:
-                    cat = new Cat
+                    cat = new CatStreamModel
                     {
-                        Id = Convert.ToInt32(values[1].Value),
-                        Name = values[2].Value,
-                        CreatedDate = Convert.ToDateTime(values[3].Value),
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
+                        Name = dict[FieldNames.Name],
+                        CreatedDate = Convert.ToDateTime(dict[FieldNames.CreationDate]),
                     };
 
                     break;
                 case 2:
-                    cat = new Cat
+                    cat = new CatStreamModel
                     {
-                        Id = Convert.ToInt32(values[1].Value),
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
                     };
                     break;
             }
@@ -91,19 +90,18 @@ namespace DAL.CacheAllocation
 
         public async void ListenRedisTask()
         {
-            while (!Token.IsCancellationRequested)
-            {
-                var lastHandledElement = redisComsumer.GetLastHandledElement();
+            await Task.Run(() =>
+           {
+               while (!Token.IsCancellationRequested)
+               {
+                   var lastHandledElement = redisComsumer.GetLastHandledElement();
 
-                if (lastHandledElement != null)
-                {
-                    lock (channelProducer)
-                    {
-                        channelProducer.Write(lastHandledElement);
-                    }
-                }
-                await Task.Delay(1);
-            }
+                   if (lastHandledElement != null)
+                   {
+                        channelProducer.Write(ParseResult(lastHandledElement));
+                   }
+               }
+           });
         }
 
         public async void ListenChannelTask()
@@ -113,18 +111,22 @@ namespace DAL.CacheAllocation
                 if (await channelComsumer.WaitToRead())
                 {
                     var streamCat = await channelComsumer.Read();
-
-                    Cat cat = ParseResult(streamCat);
-                    switch (streamCat[0].Value.ToString())
+                    lock (cacheDictionary)
                     {
-                        case CommandTypes.Insert:
-                            Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
-                            cacheDictionary.Add(cat.Id, new WeakReference(cat));
-                            break;
-                        case CommandTypes.Delete:
-                            Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
-                            cacheDictionary.Remove(cat.Id);
-                            break;
+                        Cat cat = new Cat { Id = streamCat.Id, Name = streamCat.Name, CreatedDate = streamCat.CreatedDate };
+
+                        switch (streamCat.Command)
+                        {
+                            case CommandTypes.Insert:
+                                Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+                                cacheDictionary.Add(streamCat.Id, new WeakReference(cat));
+                                break;
+                            case CommandTypes.Delete:
+                                Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
+                                cacheDictionary.Remove(cat.Id);
+                                break;
+                        }
+
                     }
                 }
             }

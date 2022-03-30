@@ -1,24 +1,18 @@
 ﻿using BLL.Interfaces.Cache;
-using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace DAL.CacheAllocation
 {
-    public class ChannelContext : IChannelContext<NameValueEntry[]>
+    public class ChannelContext : IChannelContext<CatStreamModel>
     {
-        Channel<NameValueEntry[]> channel;
+        Channel<CatStreamModel> channel;
 
         public ChannelContext()
         {
-            channel = Channel.CreateUnbounded<NameValueEntry[]>();
+            channel = Channel.CreateUnbounded<CatStreamModel>();
         }
 
-        public Channel<NameValueEntry[]> GetChannel()
+        public Channel<CatStreamModel> GetChannel()
         {
             return channel;
         }

@@ -1,6 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces.Cache;
 using StackExchange.Redis;
+using CSRedis;
 
 namespace DAL.CacheAllocation.Producers
 {
@@ -10,32 +11,35 @@ namespace DAL.CacheAllocation.Producers
         IDatabase db;
         const string streamName = "telemetry";
 
+        CSRedisClient client;
+
         public RedisProducer()
         {
-            this.connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
-            this.db = connectionMultiplexer.GetDatabase();
+            client = new CSRedisClient("localhost:6379");
+            //this.connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
+            //this.db = connectionMultiplexer.GetDatabase();
         }
 
         public void AddInsertCommand(Cat item)
         {
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Insert),
-                new NameValueEntry(FieldNames.Id, item.Id),
-                new NameValueEntry(FieldNames.Name, item.Name),
-                new NameValueEntry(FieldNames.CreationDate, item.CreatedDate.ToString()),
+            lock (client)
+            {
+
+            client.XAdd(streamName, new (string, string)[] 
+            { new (FieldNames.Command, CommandTypes.Insert),
+              new (FieldNames.Id, item.Id.ToString()),
+              new (FieldNames.Name, item.Name),
+              new (FieldNames.CreationDate, item.CreatedDate.ToString()),
             });
+            }
         }
 
         public void AddDeleteCommand(int key)
         {
-            var result = db.StreamRange(streamName, "-", "+").FirstOrDefault(c => c.Values[0].Value == key);
-
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Delete),
-                new NameValueEntry(FieldNames.Id, key),
+            client.XAdd(streamName, new (string, string)[]
+            { new (FieldNames.Command, CommandTypes.Delete),
+              new (FieldNames.Id, key.ToString()),
             });
-
-            if (!result.IsNull) db.StreamDelete(streamName, new RedisValue[] { result.Id });
         }
     }
 }
