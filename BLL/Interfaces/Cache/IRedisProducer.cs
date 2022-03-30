@@ -1,5 +1,4 @@
 ﻿using BLL.Entities;
-using StackExchange.Redis;
 
 namespace BLL.Interfaces.Cache
 {

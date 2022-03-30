@@ -7,6 +7,7 @@ using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
 using DAL;
 using DAL.CacheAllocation;
+using DAL.CacheAllocation.Cosumers;
 using DAL.CacheAllocation.Producers;
 using DAL.EF;
 using DAL.Finders;
@@ -15,6 +16,7 @@ using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +36,12 @@ builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
 builder.Services.AddScoped<IRedisConfiguration, RedisConfiguration>();
  
 builder.Services.AddSingleton<ICache<Cat>, Cache>();
+builder.Services.AddSingleton<IChannelContext<NameValueEntry[]>, ChannelContext>();
+
+builder.Services.AddSingleton<IChannelProducer<NameValueEntry[]>, ChannelProducer>();
+builder.Services.AddSingleton<IChannelConsumer<NameValueEntry[]>, ChannelConsumer>();
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
+builder.Services.AddSingleton<IRedisConsumer, RedisConsumer>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 

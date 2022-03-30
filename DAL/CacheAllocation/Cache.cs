@@ -14,23 +14,29 @@ namespace DAL.CacheAllocation
         CancellationTokenSource tokenSource;
         CancellationToken Token;
 
-        Channel<NameValueEntry[]> channel;
-
         IRedisProducer redisProducer;
-        RedisConsumer redisComsumer;
+        IRedisConsumer redisComsumer;
+
+        IChannelProducer<NameValueEntry[]> channelProducer;
+        IChannelConsumer<NameValueEntry[]> channelComsumer;
 
         const string streamName = "telemetry";
 
-        public Cache(IRedisProducer redisProducer)
+        public Cache(
+            IRedisProducer redisProducer,
+            IRedisConsumer redisConsumer,
+            IChannelProducer<NameValueEntry[]> channelProducer,
+            IChannelConsumer<NameValueEntry[]> channelComsumer)
         {
             cacheDictionary = new();
             this.redisProducer = redisProducer;
-            redisComsumer = new RedisConsumer();
+            this.redisComsumer = redisConsumer;
+
+            this.channelProducer = channelProducer;
+            this.channelComsumer = channelComsumer;
 
             tokenSource = new CancellationTokenSource();
             Token = tokenSource.Token;
-
-            channel = Channel.CreateUnbounded<NameValueEntry[]>();
         }
 
         private Cat ParseResult(NameValueEntry[] values)
@@ -91,12 +97,11 @@ namespace DAL.CacheAllocation
 
                 if (lastHandledElement != null)
                 {
-                    lock (channel)
+                    lock (channelProducer)
                     {
-                        channel.Writer.WriteAsync(lastHandledElement);
+                        channelProducer.Write(lastHandledElement);
                     }
                 }
-
                 await Task.Delay(1);
             }
         }
@@ -105,9 +110,9 @@ namespace DAL.CacheAllocation
         {
             while (!Token.IsCancellationRequested)
             {
-                if (await channel.Reader.WaitToReadAsync())
+                if (await channelComsumer.WaitToRead())
                 {
-                    var streamCat = await channel.Reader.ReadAsync();
+                    var streamCat = await channelComsumer.Read();
 
                     Cat cat = ParseResult(streamCat);
                     switch (streamCat[0].Value.ToString())

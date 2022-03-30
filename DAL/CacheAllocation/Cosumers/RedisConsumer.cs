@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using BLL.Interfaces.Cache;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DAL.CacheAllocation.Cosumers
 {
-    public class RedisConsumer
+    public class RedisConsumer : IRedisConsumer
     {
         ConnectionMultiplexer connectionMultiplexer;
         IDatabase db;
