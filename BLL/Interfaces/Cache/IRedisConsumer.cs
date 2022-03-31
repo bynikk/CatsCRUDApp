@@ -2,6 +2,8 @@
 {
     public interface IRedisConsumer
     {
-        public Dictionary<string, string>? WaitToGetNewElement(ref string lastId);
+        public EventHandler<string> OnDataReceived { get; set; }
+
+        public void WaitToGetNewElement();
     }
 }

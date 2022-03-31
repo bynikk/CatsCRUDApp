@@ -1,6 +1,10 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Interfaces.Cache;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
+using System.Net;
 
 namespace DAL.CacheAllocation
 {
@@ -83,16 +87,20 @@ namespace DAL.CacheAllocation
 
         public async void ListenRedisTask()
         {
-            string lastId = string.Empty;
-            while (!Token.IsCancellationRequested)
+            redisComsumer.OnDataReceived += (sender, message) =>
             {
-                var lastHandledElement = redisComsumer.WaitToGetNewElement(ref lastId);
-                if (lastHandledElement != null)
-                {
-                    await channelProducer.Write(ParseResult(lastHandledElement));
-                }
-            }
+                Console.WriteLine(message);
+                var dict = message.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+               .Select(part => part.Split('='))
+               .ToDictionary(split => split[0], split => split[1]);
+
+                channelProducer.Write(ParseResult(dict));
+            };
+
+            redisComsumer.WaitToGetNewElement();
         }
+
+        
 
         public async void ListenChannelTask()
         {
