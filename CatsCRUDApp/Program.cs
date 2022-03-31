@@ -86,7 +86,7 @@ app.MapControllers();
 
 var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
 
-cache.ListenRedisTask();
+Task.Run(() => cache.ListenRedisTask());
 cache.ListenChannelTask();
 
 app.Run();

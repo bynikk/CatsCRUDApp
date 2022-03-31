@@ -2,6 +2,6 @@
 {
     public interface IRedisConsumer
     {
-        public Dictionary<string, string>? WaitToGetNewElement();
+        public Dictionary<string, string>? WaitToGetNewElement(ref string lastId);
     }
 }

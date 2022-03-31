@@ -14,11 +14,17 @@ namespace DAL.CacheAllocation.Cosumers
             client = new CSRedisClient("localhost:6379");
         }
 
-        public Dictionary<string, string> WaitToGetNewElement()
+        public Dictionary<string, string>? WaitToGetNewElement(ref string lastId)
         {
             var result = client.XRead(1, expiryTime, new (string key, string id)[] { new(streamName, "$") });
+
             if (result != null)
             {
+                if (result[0].key != lastId)
+                {
+                    var result1 = client.XRange(streamName, lastId, "+", 2);
+                }
+                lastId = result[0].data[0].id;
                 return parse(result[0]);
             }
 

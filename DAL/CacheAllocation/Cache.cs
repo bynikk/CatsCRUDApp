@@ -69,18 +69,11 @@ namespace DAL.CacheAllocation
 
         public Cat? Get(int key)
         { 
-            if (!cacheDictionary.ContainsKey(key))
+            if (cacheDictionary.ContainsKey(key) && cacheDictionary[key].IsAlive)
             {
-                return null;
+                return cacheDictionary[key].Target as Cat;
             }
-
-            if (!cacheDictionary[key].IsAlive)
-            {
-                Delete(key);
-                return null;
-            }
-
-            return cacheDictionary[key].Target as Cat;            
+            return null;
         }
 
         public void Delete(int key)
@@ -90,18 +83,15 @@ namespace DAL.CacheAllocation
 
         public async void ListenRedisTask()
         {
-            await Task.Run(() =>
-           {
-               while (!Token.IsCancellationRequested)
-               {
-                   var lastHandledElement = redisComsumer.WaitToGetNewElement();
-
-                   if (lastHandledElement != null)
-                   {
-                       channelProducer.Write(ParseResult(lastHandledElement));
-                   }
-               }
-           });
+            string lastId = string.Empty;
+            while (!Token.IsCancellationRequested)
+            {
+                var lastHandledElement = redisComsumer.WaitToGetNewElement(ref lastId);
+                if (lastHandledElement != null)
+                {
+                    await channelProducer.Write(ParseResult(lastHandledElement));
+                }
+            }
         }
 
         public async void ListenChannelTask()
@@ -113,6 +103,7 @@ namespace DAL.CacheAllocation
                     var streamCat = await channelComsumer.Read();
                     lock (cacheDictionary)
                     {
+
                         Cat cat = new Cat { Id = streamCat.Id, Name = streamCat.Name, CreatedDate = streamCat.CreatedDate };
 
                         switch (streamCat.Command)

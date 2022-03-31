@@ -1,5 +1,4 @@
 ﻿using BLL.Interfaces.Cache;
-using StackExchange.Redis;
 using System.Threading.Channels;
 
 namespace DAL.CacheAllocation.Producers

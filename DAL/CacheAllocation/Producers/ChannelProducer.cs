@@ -13,9 +13,9 @@ namespace DAL.CacheAllocation.Producers
             this.channel = channelContext.GetChannel();
         }
 
-        public void Write(CatStreamModel item)
+        public Task Write(CatStreamModel item)
         {
-            channel.Writer.WriteAsync(item);
+            return channel.Writer.WriteAsync(item).AsTask();
         }
     }
 }
