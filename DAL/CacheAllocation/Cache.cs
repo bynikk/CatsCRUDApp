@@ -94,11 +94,11 @@ namespace DAL.CacheAllocation
            {
                while (!Token.IsCancellationRequested)
                {
-                   var lastHandledElement = redisComsumer.GetLastHandledElement();
+                   var lastHandledElement = redisComsumer.WaitToGetNewElement();
 
                    if (lastHandledElement != null)
                    {
-                        channelProducer.Write(ParseResult(lastHandledElement));
+                       channelProducer.Write(ParseResult(lastHandledElement));
                    }
                }
            });

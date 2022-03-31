@@ -6,7 +6,7 @@ namespace DAL.CacheAllocation.Cosumers
     public class RedisConsumer : IRedisConsumer
     {
         const string streamName = "telemetry";
-
+        long expiryTime = 4000;
         CSRedisClient client;
 
         public RedisConsumer()
@@ -14,12 +14,11 @@ namespace DAL.CacheAllocation.Cosumers
             client = new CSRedisClient("localhost:6379");
         }
 
-        public Dictionary<string, string>? GetLastHandledElement()
+        public Dictionary<string, string> WaitToGetNewElement()
         {
-            var result = client.XRead(1, 400, new (string key, string id)[] { new(streamName, "$") });
+            var result = client.XRead(1, expiryTime, new (string key, string id)[] { new(streamName, "$") });
             if (result != null)
             {
-                Task.Delay(1000);
                 return parse(result[0]);
             }
 

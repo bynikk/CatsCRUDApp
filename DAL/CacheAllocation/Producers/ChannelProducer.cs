@@ -15,10 +15,7 @@ namespace DAL.CacheAllocation.Producers
 
         public void Write(CatStreamModel item)
         {
-            lock(channel)
-            {
-                channel.Writer.WriteAsync(item);
-            }
+            channel.Writer.WriteAsync(item);
         }
     }
 }
