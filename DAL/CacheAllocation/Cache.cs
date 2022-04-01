@@ -1,7 +1,10 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
+using BLL.Interfaces.Cache;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
-using System.Threading.Channels;
+using System.Net;
 
 namespace DAL.CacheAllocation
 {
@@ -11,49 +14,52 @@ namespace DAL.CacheAllocation
 
         CancellationTokenSource tokenSource;
         CancellationToken Token;
-        ConnectionMultiplexer connectionMultiplexer;
 
-        IDatabase db;
+        IRedisProducer redisProducer;
+        IRedisConsumer redisComsumer;
 
-        TimeSpan expiry = TimeSpan.FromSeconds(30);
+        IChannelProducer<CatStreamModel> channelProducer;
+        IChannelConsumer<CatStreamModel> channelComsumer;
 
         const string streamName = "telemetry";
-        const string groupName = "avg";
 
-        public Cache()
+        public Cache(
+            IRedisProducer redisProducer,
+            IRedisConsumer redisConsumer,
+            IChannelProducer<CatStreamModel> channelProducer,
+            IChannelConsumer<CatStreamModel> channelComsumer)
         {
+            cacheDictionary = new();
+            this.redisProducer = redisProducer;
+            this.redisComsumer = redisConsumer;
 
-            cacheDictionary = new ();
-            connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
-            this.db = connectionMultiplexer.GetDatabase();
+            this.channelProducer = channelProducer;
+            this.channelComsumer = channelComsumer;
 
             tokenSource = new CancellationTokenSource();
             Token = tokenSource.Token;
-
-            if (!(db.KeyExists(streamName)) || (db.StreamGroupInfo(streamName)).All(x => x.Name != groupName))
-            {
-                db.StreamCreateConsumerGroup(streamName, groupName, "0-0", true);
-            }
         }
 
-        private Cat ParseResult(NameValueEntry[] values)
+        private CatStreamModel ParseResult(Dictionary<string, string> dict)
         {
-            var cat = new Cat();
-            switch (values.Length)
+            var cat = new CatStreamModel();
+            switch (dict.Count)
             {
                 case 4:
-                    cat = new Cat
+                    cat = new CatStreamModel
                     {
-                        Id = Convert.ToInt32(values[1].Value),
-                        Name = values[2].Value,
-                        CreatedDate = Convert.ToDateTime(values[3].Value),
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
+                        Name = dict[FieldNames.Name],
+                        CreatedDate = Convert.ToDateTime(dict[FieldNames.CreationDate]),
                     };
 
                     break;
                 case 2:
-                    cat = new Cat
+                    cat = new CatStreamModel
                     {
-                        Id = Convert.ToInt32(values[1].Value),
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
                     };
                     break;
             }
@@ -61,80 +67,65 @@ namespace DAL.CacheAllocation
         }
 
         public void Set(Cat item)
-        {
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Insert),
-                new NameValueEntry(FieldNames.Id, item.Id),
-                new NameValueEntry(FieldNames.Name, item.Name),
-                new NameValueEntry(FieldNames.CreationDate, item.CreatedDate.ToString()),
-            });
+        { 
+            redisProducer.AddInsertCommand(item);
         }
 
         public Cat? Get(int key)
         { 
-            if (!cacheDictionary.ContainsKey(key))
+            if (cacheDictionary.ContainsKey(key) && cacheDictionary[key].IsAlive)
             {
-                return null;
+                return cacheDictionary[key].Target as Cat;
             }
-
-            if (!cacheDictionary[key].IsAlive)
-            {
-                Delete(key);
-                return null;
-            }
-
-            return cacheDictionary[key].Target as Cat;            
+            return null;
         }
 
         public void Delete(int key)
         {
-            var result = db.StreamRange(streamName, "-", "+").FirstOrDefault(c => c.Values[0].Value == key);
-
-            db.StreamAdd(streamName, new NameValueEntry[] {
-                new NameValueEntry(FieldNames.Command, CommandTypes.Delete),
-                new NameValueEntry(FieldNames.Id, key),
-
-            });
-
-            if (!result.IsNull) db.StreamDelete(streamName, new RedisValue[] { result.Id });
+            redisProducer.AddDeleteCommand(key);
         }
 
-        public async void ListenTask()
+        public async void ListenRedisTask()
         {
-            var handledResult = await db.StreamRangeAsync(streamName, "-", "+", 1, Order.Descending);
-            var lowestHandledId = handledResult.Last().Id;
+            redisComsumer.OnDataReceived += (sender, message) =>
+            {
+                Console.WriteLine(message);
+                var dict = message.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+               .Select(part => part.Split('='))
+               .ToDictionary(split => split[0], split => split[1]);
 
-            var token = Environment.MachineName;
+                channelProducer.Write(ParseResult(dict));
+            };
 
+            redisComsumer.WaitToGetNewElement();
+        }
+
+        
+
+        public async void ListenChannelTask()
+        {
             while (!Token.IsCancellationRequested)
             {
-                var result = await db.StreamRangeAsync(streamName, lowestHandledId, "+", 2);
-                var handleResult = result.Last();
-
-                if (result.Any() && lowestHandledId != handleResult.Id)
+                if (await channelComsumer.WaitToRead())
                 {
-                    lock(cacheDictionary)
+                    var streamCat = await channelComsumer.Read();
+                    lock (cacheDictionary)
                     {
-                        lowestHandledId = handleResult.Id;
 
-                        var streamCat = handleResult.Values;
-                        Cat cat = ParseResult(streamCat);
+                        Cat cat = new Cat { Id = streamCat.Id, Name = streamCat.Name, CreatedDate = streamCat.CreatedDate };
 
-                        switch (streamCat[0].Value.ToString())
+                        switch (streamCat.Command)
                         {
                             case CommandTypes.Insert:
                                 Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
-
-                                cacheDictionary.Add(cat.Id, new WeakReference(cat));
-
+                                cacheDictionary.Add(streamCat.Id, new WeakReference(cat));
                                 break;
                             case CommandTypes.Delete:
                                 Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
-
                                 cacheDictionary.Remove(cat.Id);
-
                                 break;
                         }
+
                     }
                 }
             }

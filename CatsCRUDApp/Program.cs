@@ -1,11 +1,14 @@
 using BLL.Entities;
 using BLL.Interfaces;
+using BLL.Interfaces.Cache;
 using BLL.Services;
 using CatsCRUDApp;
 using CatsCRUDApp.Models;
 using CatsCRUDApp.Validators;
 using DAL;
 using DAL.CacheAllocation;
+using DAL.CacheAllocation.Cosumers;
+using DAL.CacheAllocation.Producers;
 using DAL.EF;
 using DAL.Finders;
 using DAL.MongoDb;
@@ -14,7 +17,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,8 +34,14 @@ builder.Services.AddScoped<IValidator<Cat>, CatValidator>();
 builder.Services.AddScoped<IValidator<CatViewModel>, CatViewModelValidator>();
 
 builder.Services.AddScoped<IRedisConfiguration, RedisConfiguration>();
-
+ 
 builder.Services.AddSingleton<ICache<Cat>, Cache>();
+builder.Services.AddSingleton<IChannelContext<CatStreamModel>, ChannelContext>();
+
+builder.Services.AddSingleton<IChannelProducer<CatStreamModel>, ChannelProducer>();
+builder.Services.AddSingleton<IChannelConsumer<CatStreamModel>, ChannelConsumer>();
+builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
+builder.Services.AddSingleton<IRedisConsumer, RedisConsumer>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 
@@ -75,7 +83,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-var cache = new Cache();
-cache.ListenTask();
+
+var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
+
+Task.Run(() => cache.ListenRedisTask());
+cache.ListenChannelTask();
 
 app.Run();
