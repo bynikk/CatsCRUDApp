@@ -12,7 +12,7 @@ namespace DAL.CacheAllocation.Producers
 
         public RedisProducer()
         {
-            client = new RedisClient("localhost", 6379);
+            client = new RedisClient("redis", 6379);
         }
 
         public void AddInsertCommand(Cat item)

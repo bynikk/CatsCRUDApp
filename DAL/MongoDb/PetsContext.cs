@@ -12,7 +12,7 @@ namespace DAL.MongoDb
         {
             var config = new MongoDBConfig();
             config.Port = 27017;
-            config.Host = "localhost";
+            config.Host = "mongo";
             config.Database = "carscrudapp";
 
             var client = new MongoClient(config.ConnectionString);
