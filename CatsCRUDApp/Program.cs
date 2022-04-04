@@ -21,6 +21,11 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.ConfigureAppConfiguration(config =>
+{
+    var prefis = "SAMPLEAPI_";
+    config.AddEnvironmentVariables(prefis);
+});
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
@@ -86,7 +91,7 @@ app.MapControllers();
 
 var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
 
-Task.Run(() => cache.ListenRedisTask());
-cache.ListenChannelTask();
+//cache.ListenRedisTask();
+//cache.ListenChannelTask();
 
 app.Run();

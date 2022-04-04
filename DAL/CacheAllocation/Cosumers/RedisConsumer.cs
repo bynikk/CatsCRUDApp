@@ -23,7 +23,10 @@ public class RedisConsumer : IRedisConsumer
 
     public void WaitToGetNewElement()
     {
-        client.Connect(expiryTime);
+        if (!client.IsConnected)
+        {
+            client.Connect(expiryTime);
+        }
 
         client.Subscribe(streamName);
     }
