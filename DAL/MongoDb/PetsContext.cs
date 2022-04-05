@@ -1,5 +1,6 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
+using DAL.Config;
 using MongoDB.Driver;
 
 namespace DAL.MongoDb
@@ -8,15 +9,15 @@ namespace DAL.MongoDb
     {
         private readonly IMongoDatabase database;   
 
-        public PetsContext()
+        public PetsContext(Ipconfig config)
         {
-            var config = new MongoDBConfig();
-            config.Port = 27017;
-            config.Host = "mongo";
-            config.Database = "carscrudapp";
+            var buff = new MongoDBConfig();
+            buff.Port = config.MongoPort;
+            buff.Host = config.MongoIp;
+            buff.Database = "carscrudapp";
 
-            var client = new MongoClient(config.ConnectionString);
-            database = client.GetDatabase(config.Database);
+            var client = new MongoClient(buff.ConnectionString);
+            database = client.GetDatabase(buff.Database);
         }
         public IMongoCollection<Cat> Cats => database.GetCollection<Cat>("Cats");
         public IMongoCollection<Dog> Dogs => database.GetCollection<Dog>("Dogs");

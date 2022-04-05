@@ -9,6 +9,7 @@ using DAL;
 using DAL.CacheAllocation;
 using DAL.CacheAllocation.Cosumers;
 using DAL.CacheAllocation.Producers;
+using DAL.Config;
 using DAL.EF;
 using DAL.Finders;
 using DAL.MongoDb;
@@ -26,6 +27,26 @@ builder.Host.ConfigureAppConfiguration(config =>
     var prefis = "SAMPLEAPI_";
     config.AddEnvironmentVariables(prefis);
 });
+
+var config = new Ipconfig();
+var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
+var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
+
+if (!string.IsNullOrEmpty(mongoIp))
+{
+    config.MongoIp = mongoIp;
+}
+
+if (!string.IsNullOrEmpty(redisIp))
+{
+    config.RedisIp = redisIp;
+}
+
+Console.WriteLine(config.RedisIp);
+Console.WriteLine(config.MongoIp);
+
+
+builder.Services.AddSingleton<Ipconfig>(x => config);
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();

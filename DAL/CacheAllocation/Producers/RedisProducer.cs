@@ -1,6 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces.Cache;
 using CSRedis;
+using DAL.Config;
 
 namespace DAL.CacheAllocation.Producers
 {
@@ -10,9 +11,9 @@ namespace DAL.CacheAllocation.Producers
 
         RedisClient client;
 
-        public RedisProducer()
+        public RedisProducer(Ipconfig config)
         {
-            client = new RedisClient("redis", 6379);
+            client = new RedisClient(config.RedisIp, config.RedisPort);
         }
 
         public void AddInsertCommand(Cat item)

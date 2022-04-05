@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-redis-deployment
+  labels:
+    app: sample
+    env: dev
+    targetApp: redis
+spec:
+  selector:
+    matchLabels:
+      app: sample-redis-container
+  template:
+    metadata:
+      labels:
+        app: sample-redis-container
+    spec:
+      containers:
+        - name: sample-redis-container
+          image: redis:6-alpine
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4096Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 6379
+          
