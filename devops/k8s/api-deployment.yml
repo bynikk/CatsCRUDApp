@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sample-api-container
-          image: sample-api:1.0.2
+          image: samle-api:1.0.2
           imagePullPolicy: Never
           resources:
             requests:
@@ -29,7 +29,11 @@ spec:
           env:
             - name: "SAMPLEAPI_ConnectionStrings_Redis"
               value: "sample-redis-service"
+            - name: "SAMPLEAPI_Port_Redis"
+              value: "6380"
             - name: "SAMPLEAPI_ConnectionStrings_Mongo"
               value: "sample-mongo-service"
+            - name: "SAMPLEAPI_Port_Mongo"
+              value: "27018"
           ports:
             - containerPort: 80

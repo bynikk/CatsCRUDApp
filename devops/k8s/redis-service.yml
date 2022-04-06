@@ -12,6 +12,6 @@ spec:
   ports:
     - name: redis-listner
       protocol: TCP
-      port: 6379
+      port: 6380
       targetPort: 6379
   type: NodePort

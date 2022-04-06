@@ -30,7 +30,9 @@ builder.Host.ConfigureAppConfiguration(config =>
 
 var config = new Ipconfig();
 var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
+var mongoPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Mongo").Value;
 var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
+var redisPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Redis").Value;
 
 if (!string.IsNullOrEmpty(mongoIp))
 {
@@ -42,8 +44,20 @@ if (!string.IsNullOrEmpty(redisIp))
     config.RedisIp = redisIp;
 }
 
+if (!string.IsNullOrEmpty(mongoPort))
+{
+    config.MongoPort = int.Parse(mongoPort);
+}
+
+if (!string.IsNullOrEmpty(redisPort))
+{
+    config.RedisPort = int.Parse(redisPort);
+}
+
 Console.WriteLine(config.RedisIp);
+Console.WriteLine(config.RedisPort);
 Console.WriteLine(config.MongoIp);
+Console.WriteLine(config.MongoPort);
 
 
 builder.Services.AddSingleton<Ipconfig>(x => config);
