@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-mongo-service
+  labels:
+    app: sample
+    env: dev
+    targetApp: mongo
+spec:
+  selector:
+    app: sample-mongo-container
+  ports:
+    - name: mongo-listner
+      protocol: TCP
+      port: 27018
+      targetPort: 27017
+  type: NodePort

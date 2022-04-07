@@ -1,5 +1,6 @@
 ﻿using BLL.Interfaces.Cache;
 using CSRedis;
+using DAL.Config;
 
 namespace DAL.CacheAllocation.Cosumers;
 
@@ -9,9 +10,9 @@ public class RedisConsumer : IRedisConsumer
     int expiryTime = 4000;
     RedisClient client;
 
-    public RedisConsumer()
+    public RedisConsumer(Ipconfig config)
     {
-        client = new RedisClient("localhost", 6379);
+        client = new RedisClient(config.RedisIp, config.RedisPort);
 
         client.SubscriptionReceived += (sender, data) => 
         {
@@ -23,7 +24,10 @@ public class RedisConsumer : IRedisConsumer
 
     public void WaitToGetNewElement()
     {
-        client.Connect(expiryTime);
+        if (!client.IsConnected)
+        {
+            client.Connect(expiryTime);
+        }
 
         client.Subscribe(streamName);
     }

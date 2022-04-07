@@ -9,6 +9,7 @@ using DAL;
 using DAL.CacheAllocation;
 using DAL.CacheAllocation.Cosumers;
 using DAL.CacheAllocation.Producers;
+using DAL.Config;
 using DAL.EF;
 using DAL.Finders;
 using DAL.MongoDb;
@@ -21,6 +22,45 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.ConfigureAppConfiguration(config =>
+{
+    var prefis = "SAMPLEAPI_";
+    config.AddEnvironmentVariables(prefis);
+});
+
+var config = new Ipconfig();
+var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
+var mongoPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Mongo").Value;
+var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
+var redisPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Redis").Value;
+
+if (!string.IsNullOrEmpty(mongoIp))
+{
+    config.MongoIp = mongoIp;
+}
+
+if (!string.IsNullOrEmpty(redisIp))
+{
+    config.RedisIp = redisIp;
+}
+
+if (!string.IsNullOrEmpty(mongoPort))
+{
+    config.MongoPort = int.Parse(mongoPort);
+}
+
+if (!string.IsNullOrEmpty(redisPort))
+{
+    config.RedisPort = int.Parse(redisPort);
+}
+
+Console.WriteLine(config.RedisIp);
+Console.WriteLine(config.RedisPort);
+Console.WriteLine(config.MongoIp);
+Console.WriteLine(config.MongoPort);
+
+
+builder.Services.AddSingleton<Ipconfig>(x => config);
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
@@ -86,7 +126,7 @@ app.MapControllers();
 
 var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
 
-Task.Run(() => cache.ListenRedisTask());
+cache.ListenRedisTask();
 cache.ListenChannelTask();
 
 app.Run();

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  name: sample-api-ingress
+spec:
+  rules:
+    - host: hello-world.info
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sample-api-service
+                port:
+                  number: 8889
+  #rules:
+  #  - http:
+  #      paths: 
+  #        - path: /sample-api-service/?(.*)
+  #          pathType: Prefix
+  #          backend:
+  #            service:
+  #              name: sample-api-service
+  #              port:
+  #                number: 8889

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-mongo-deployment
+  labels:
+    app: sample
+    env: dev
+    targetApp: mongo
+spec:
+  selector:
+    matchLabels:
+      app: sample-mongo-container
+  template:
+    metadata:
+      labels:
+        app: sample-mongo-container
+    spec:
+      containers:
+        - name: sample-mongo-container
+          image: mongo:latest
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4096Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 27017
+          

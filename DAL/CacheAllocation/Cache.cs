@@ -97,7 +97,7 @@ namespace DAL.CacheAllocation
                 channelProducer.Write(ParseResult(dict));
             };
 
-            redisComsumer.WaitToGetNewElement();
+            await Task.Run(() => redisComsumer.WaitToGetNewElement());
         }
 
         
