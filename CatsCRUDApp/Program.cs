@@ -17,7 +17,17 @@ using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
+
+//TODO:
+// onconfigureMongo/Redis
+
+//listneres problems
+
+// implement automapper from streamcat to cat
+
+// implement redisstream name "telemetry" in configure
+// config file to Redis/Mongo
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +38,9 @@ builder.Host.ConfigureAppConfiguration(config =>
     config.AddEnvironmentVariables(prefis);
 });
 
-var config = new Ipconfig();
+var mongoConfig = new MongoConfig();
+var redisConfig = new RedisConfig();
+
 var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
 var mongoPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Mongo").Value;
 var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
@@ -36,31 +48,32 @@ var redisPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Redis").Value;
 
 if (!string.IsNullOrEmpty(mongoIp))
 {
-    config.MongoIp = mongoIp;
+    mongoConfig.Ip = mongoIp;
 }
 
 if (!string.IsNullOrEmpty(redisIp))
 {
-    config.RedisIp = redisIp;
+    redisConfig.Ip = redisIp;
 }
 
 if (!string.IsNullOrEmpty(mongoPort))
 {
-    config.MongoPort = int.Parse(mongoPort);
+    mongoConfig.Port = int.Parse(mongoPort);
 }
 
 if (!string.IsNullOrEmpty(redisPort))
 {
-    config.RedisPort = int.Parse(redisPort);
+    redisConfig.Port = int.Parse(redisPort);
 }
 
-Console.WriteLine(config.RedisIp);
-Console.WriteLine(config.RedisPort);
-Console.WriteLine(config.MongoIp);
-Console.WriteLine(config.MongoPort);
+Console.WriteLine(redisConfig.Ip);
+Console.WriteLine(redisConfig.Port);
+Console.WriteLine(mongoConfig.Ip);
+Console.WriteLine(mongoConfig.Port);
 
 
-builder.Services.AddSingleton<Ipconfig>(x => config);
+builder.Services.AddSingleton<MongoConfig>();
+builder.Services.AddSingleton<RedisConfig>();
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
@@ -123,7 +136,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-
+  
 var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
 
 cache.ListenRedisTask();

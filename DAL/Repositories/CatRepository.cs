@@ -1,8 +1,6 @@
-﻿
-using BLL.Entities;
+﻿using BLL.Entities;
 using BLL.Interfaces;
 using MongoDB.Driver;
-using ServiceStack.Redis;
 
 namespace DAL.Repositories
 {

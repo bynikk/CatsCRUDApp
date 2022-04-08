@@ -11,9 +11,9 @@ namespace DAL.CacheAllocation.Producers
 
         RedisClient client;
 
-        public RedisProducer(Ipconfig config)
+        public RedisProducer(RedisConfig config)
         {
-            client = new RedisClient(config.RedisIp, config.RedisPort);
+            client = new RedisClient(config.Ip, config.Port);
         }
 
         public void AddInsertCommand(Cat item)

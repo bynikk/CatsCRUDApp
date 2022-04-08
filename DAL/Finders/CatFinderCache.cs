@@ -1,7 +1,6 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using ServiceStack;
-using ServiceStack.Redis;
 
 namespace DAL.Finders
 {

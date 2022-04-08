@@ -10,9 +10,9 @@ public class RedisConsumer : IRedisConsumer
     int expiryTime = 4000;
     RedisClient client;
 
-    public RedisConsumer(Ipconfig config)
+    public RedisConsumer(RedisConfig config)
     {
-        client = new RedisClient(config.RedisIp, config.RedisPort);
+        client = new RedisClient(config.Ip, config.Port);
 
         client.SubscriptionReceived += (sender, data) => 
         {

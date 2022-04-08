@@ -1,10 +1,7 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Interfaces.Cache;
-using RedLockNet.SERedis;
-using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
-using System.Net;
 
 namespace DAL.CacheAllocation
 {

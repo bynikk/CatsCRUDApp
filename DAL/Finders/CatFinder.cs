@@ -1,8 +1,8 @@
 ﻿using BLL.Entities;
 using BLL.Interfaces;
+using DAL.CacheAllocation;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
-using ServiceStack.Redis;
 
 namespace DAL.Finders
 {
@@ -17,7 +17,7 @@ namespace DAL.Finders
 
         public async virtual Task<Cat>? GetById(int catId)
         {
-            var filter = Builders<Cat>.Filter.Eq("Id", catId);
+            var filter = Builders<Cat>.Filter.Eq(FieldNames.Id, catId);
             var existing = await context.Cats.Find(filter).FirstOrDefaultAsync();
 
             if (existing == null) throw new ArgumentNullException();

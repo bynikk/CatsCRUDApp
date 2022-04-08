@@ -27,7 +27,7 @@ namespace DAL.Repositories
         public override Task Update(Cat item)
         {
             int cacheKey = item.Id;
-            Cat cat = cache.Get(cacheKey);
+            Cat? cat = cache.Get(cacheKey);
 
             if (cat == null)
             {
