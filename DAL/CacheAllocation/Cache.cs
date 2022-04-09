@@ -1,4 +1,5 @@
-﻿using BLL.Entities;
+﻿using AutoMapper;
+using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Interfaces.Cache;
 using StackExchange.Redis;
@@ -18,13 +19,14 @@ namespace DAL.CacheAllocation
         IChannelProducer<CatStreamModel> channelProducer;
         IChannelConsumer<CatStreamModel> channelComsumer;
 
-        const string streamName = "telemetry";
+        IMapper mapper;
 
         public Cache(
             IRedisProducer redisProducer,
             IRedisConsumer redisConsumer,
             IChannelProducer<CatStreamModel> channelProducer,
-            IChannelConsumer<CatStreamModel> channelComsumer)
+            IChannelConsumer<CatStreamModel> channelComsumer,
+            IMapper mapper)
         {
             cacheDictionary = new();
             this.redisProducer = redisProducer;
@@ -33,35 +35,11 @@ namespace DAL.CacheAllocation
             this.channelProducer = channelProducer;
             this.channelComsumer = channelComsumer;
 
+            this.mapper = mapper;
             tokenSource = new CancellationTokenSource();
             Token = tokenSource.Token;
         }
 
-        private CatStreamModel ParseResult(Dictionary<string, string> dict)
-        {
-            var cat = new CatStreamModel();
-            switch (dict.Count)
-            {
-                case 4:
-                    cat = new CatStreamModel
-                    {
-                        Command = dict[FieldNames.Command],
-                        Id = Convert.ToInt32(dict[FieldNames.Id]),
-                        Name = dict[FieldNames.Name],
-                        CreatedDate = Convert.ToDateTime(dict[FieldNames.CreationDate]),
-                    };
-
-                    break;
-                case 2:
-                    cat = new CatStreamModel
-                    {
-                        Command = dict[FieldNames.Command],
-                        Id = Convert.ToInt32(dict[FieldNames.Id]),
-                    };
-                    break;
-            }
-            return cat;
-        }
 
         public void Set(Cat item)
         { 
@@ -86,18 +64,12 @@ namespace DAL.CacheAllocation
         {
             redisComsumer.OnDataReceived += (sender, message) =>
             {
-                Console.WriteLine(message);
-                var dict = message.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-               .Select(part => part.Split('='))
-               .ToDictionary(split => split[0], split => split[1]);
-
-                channelProducer.Write(ParseResult(dict));
+                channelProducer.Write(ParseResult(message));
             };
 
             await Task.Run(() => redisComsumer.WaitToGetNewElement());
         }
 
-        
 
         public async void ListenChannelTask()
         {
@@ -108,23 +80,56 @@ namespace DAL.CacheAllocation
                     var streamCat = await channelComsumer.Read();
                     lock (cacheDictionary)
                     {
-
-                        Cat cat = new Cat { Id = streamCat.Id, Name = streamCat.Name, CreatedDate = streamCat.CreatedDate };
-
-                        switch (streamCat.Command)
-                        {
-                            case CommandTypes.Insert:
-                                Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
-                                cacheDictionary.Add(streamCat.Id, new WeakReference(cat));
-                                break;
-                            case CommandTypes.Delete:
-                                Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
-                                cacheDictionary.Remove(cat.Id);
-                                break;
-                        }
-
+                        ExecuteDicionaryCommand(
+                            streamCat.Command,
+                            mapper.Map<CatStreamModel, Cat>(streamCat));
                     }
                 }
+            }
+        }
+
+        private CatStreamModel ParseResult(string redisData)
+        {
+            Console.WriteLine(redisData);
+            var dict = redisData.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+           .Select(part => part.Split('='))
+           .ToDictionary(split => split[0], split => split[1]);
+
+            var cat = new CatStreamModel();
+            switch (dict.Count)
+            {
+                case 4:
+                    cat = new CatStreamModel
+                    {
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
+                        Name = dict[FieldNames.Name],
+                        CreatedDate = Convert.ToDateTime(dict[FieldNames.CreationDate]),
+                    };
+
+                    break;
+                case 2:
+                    cat = new CatStreamModel
+                    {
+                        Command = dict[FieldNames.Command],
+                        Id = Convert.ToInt32(dict[FieldNames.Id]),
+                    };
+                    break;
+            }
+            return cat;
+        }
+        private void ExecuteDicionaryCommand(string dictCommand, Cat cat)
+        {
+            switch (dictCommand)
+            {
+                case CommandTypes.Insert:
+                    Console.WriteLine($"{CommandTypes.Insert} cat at id:{cat.Id}");
+                    cacheDictionary.Add(cat.Id, new WeakReference(cat));
+                    break;
+                case CommandTypes.Delete:
+                    Console.WriteLine($"{CommandTypes.Delete} cat at id:{cat.Id}");
+                    cacheDictionary.Remove(cat.Id);
+                    break;
             }
         }
     }

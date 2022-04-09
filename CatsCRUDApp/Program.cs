@@ -20,13 +20,11 @@ using Microsoft.EntityFrameworkCore;
 
 //TODO:
 // onconfigureMongo/Redis
-
-//listneres problems
-
-// implement automapper from streamcat to cat
-
-// implement redisstream name "telemetry" in configure
 // config file to Redis/Mongo
+
+//listneres problems +
+// implement automapper from streamcat to cat +
+// implement redisstream name "telemetry" in configure +
 
 
 var builder = WebApplication.CreateBuilder(args);
