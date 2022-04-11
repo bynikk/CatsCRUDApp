@@ -17,11 +17,7 @@ public class MongoConfig
 
     public MongoConfig()
     {
-        Ip = "127.0.0.1";
-        Port = 27017;
-        DatabaseName = "carscrudapp";
-        CatsTableName = "Cats";
-        DogsTableName = "Dogs";
+
     }
 
 }

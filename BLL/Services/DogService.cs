@@ -29,9 +29,9 @@ namespace BLL.Services
             return dogRepository.Update(dog);
         }
 
-        public Task Delete(Dog dog)
+        public Task Delete(int id)
         {
-            return dogRepository.Delete(dog);
+            return dogRepository.Delete(id);
         }
 
         public Task<Dog> GetCatById(int DogId)

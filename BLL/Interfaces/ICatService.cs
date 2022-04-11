@@ -6,7 +6,7 @@ namespace BLL.Interfaces
     {
         Task Create(Cat cat);
         Task Update(Cat cat);
-        Task Delete(Cat cat);
+        Task Delete(int id);
         Task<List<Cat>> Get();
         Task<Cat> GetCatById(int catId);
     }

@@ -1,6 +1,8 @@
 using BLL.Entities;
 using BLL.Interfaces;
 using BLL.Interfaces.Cache;
+using BLL.Mediator;
+using BLL.Mediator.Components;
 using BLL.Services;
 using CatsCRUDApp;
 using CatsCRUDApp.Models;
@@ -17,6 +19,7 @@ using DAL.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 //TODO:
 // onconfigureMongo/Redis
@@ -36,42 +39,12 @@ builder.Host.ConfigureAppConfiguration(config =>
     config.AddEnvironmentVariables(prefis);
 });
 
-var mongoConfig = new MongoConfig();
-var redisConfig = new RedisConfig();
+builder.Services.Configure<MongoConfig>(builder.Configuration.GetSection(nameof(MongoConfig)));
+builder.Services.Configure<RedisConfig>(builder.Configuration.GetSection(nameof(RedisConfig)));
 
-var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
-var mongoPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Mongo").Value;
-var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
-var redisPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Redis").Value;
+builder.Services.AddSingleton<MongoConfig>(sp => sp.GetRequiredService<IOptions<MongoConfig>>().Value);
 
-if (!string.IsNullOrEmpty(mongoIp))
-{
-    mongoConfig.Ip = mongoIp;
-}
-
-if (!string.IsNullOrEmpty(redisIp))
-{
-    redisConfig.Ip = redisIp;
-}
-
-if (!string.IsNullOrEmpty(mongoPort))
-{
-    mongoConfig.Port = int.Parse(mongoPort);
-}
-
-if (!string.IsNullOrEmpty(redisPort))
-{
-    redisConfig.Port = int.Parse(redisPort);
-}
-
-Console.WriteLine(redisConfig.Ip);
-Console.WriteLine(redisConfig.Port);
-Console.WriteLine(mongoConfig.Ip);
-Console.WriteLine(mongoConfig.Port);
-
-
-builder.Services.AddSingleton<MongoConfig>();
-builder.Services.AddSingleton<RedisConfig>();
+builder.Services.AddSingleton<RedisConfig>(sp => sp.GetRequiredService<IOptions<RedisConfig>>().Value);
 
 builder.Services.AddScoped<ICatService, CatService>();
 builder.Services.AddScoped<IFinder<Cat>, CatFinderCache>();
@@ -93,6 +66,12 @@ builder.Services.AddSingleton<IChannelProducer<CatStreamModel>, ChannelProducer>
 builder.Services.AddSingleton<IChannelConsumer<CatStreamModel>, ChannelConsumer>();
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
 builder.Services.AddSingleton<IRedisConsumer, RedisConsumer>();
+
+builder.Services.AddScoped<CreateComponent>();
+builder.Services.AddScoped<UpdateComponent>();
+builder.Services.AddScoped<DeleteComponent>();
+builder.Services.AddScoped<GetComponent>();
+builder.Services.AddScoped<IMediator, ConcreteMediator>();
 
 builder.Services.AddAutoMapper(typeof(OrganizationProfile));
 
@@ -134,7 +113,40 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-  
+var mongoConfig = app.Services.GetService(typeof(MongoConfig)) as MongoConfig;
+var redisConfig = app.Services.GetService(typeof(RedisConfig)) as RedisConfig;
+
+var mongoIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Mongo").Value;
+var mongoPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Mongo").Value;
+var redisIp = builder.Configuration.GetSection("SAMPLEAPI_ConnectionStrings_Redis").Value;
+var redisPort = builder.Configuration.GetSection("SAMPLEAPI_Port_Redis").Value;
+
+if (!string.IsNullOrEmpty(mongoIp))
+{
+    mongoConfig.Ip = mongoIp;
+}
+
+if (!string.IsNullOrEmpty(redisIp))
+{
+    redisConfig.Ip = redisIp;
+}
+
+if (!string.IsNullOrEmpty(mongoPort))
+{
+    mongoConfig.Port = int.Parse(mongoPort);
+}
+
+if (!string.IsNullOrEmpty(redisPort))
+{
+    redisConfig.Port = int.Parse(redisPort);
+}
+
+Console.WriteLine(redisConfig.Ip);
+Console.WriteLine(redisConfig.Port);
+Console.WriteLine(mongoConfig.Ip);
+Console.WriteLine(mongoConfig.Port);
+
+
 var cache = app.Services.GetService(typeof(ICache<Cat>)) as Cache;
 
 cache.ListenRedisTask();

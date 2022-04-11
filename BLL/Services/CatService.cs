@@ -31,9 +31,9 @@ namespace BLL.Services
             return catRepository.Update(cat);
         }
 
-        public Task Delete(Cat cat)
+        public Task Delete(int id)
         {
-            return catRepository.Delete(cat);
+            return catRepository.Delete(id);
         }
 
         public Task<Cat> GetCatById(int catId)
