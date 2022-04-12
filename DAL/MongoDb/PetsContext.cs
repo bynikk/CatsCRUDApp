@@ -7,20 +7,18 @@ namespace DAL.MongoDb
 {
     public class PetsContext : IPetsContext
     {
-        private readonly IMongoDatabase database;   
+        private readonly IMongoDatabase database;
+        MongoConfig mongoConfig;
 
-        public PetsContext(Ipconfig config)
+        public PetsContext(MongoConfig config)
         {
-            var buff = new MongoDBConfig();
-            buff.Port = config.MongoPort;
-            buff.Host = config.MongoIp;
-            buff.Database = "carscrudapp";
+            mongoConfig = config;
 
-            var client = new MongoClient(buff.ConnectionString);
-            database = client.GetDatabase(buff.Database);
+            var client = new MongoClient(mongoConfig.ConnectionString);
+            database = client.GetDatabase(mongoConfig.DatabaseName);
         }
-        public IMongoCollection<Cat> Cats => database.GetCollection<Cat>("Cats");
-        public IMongoCollection<Dog> Dogs => database.GetCollection<Dog>("Dogs");
+        public IMongoCollection<Cat> Cats => database.GetCollection<Cat>(mongoConfig.CatsTableName);
+        public IMongoCollection<Dog> Dogs => database.GetCollection<Dog>(mongoConfig.DogsTableName);
 
     }
 }

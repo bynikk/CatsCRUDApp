@@ -19,9 +19,9 @@ namespace DAL.Repositories
             return context.Dogs.InsertOneAsync(item);
         }
 
-        public Task Delete(Dog item)
+        public Task Delete(int id)
         {
-            return context.Dogs.DeleteOneAsync(c => c.Id == item.Id);
+            return context.Dogs.DeleteOneAsync(c => c.Id == id);
         }
 
         public Task Update(Dog item)

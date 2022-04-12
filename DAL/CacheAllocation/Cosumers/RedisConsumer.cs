@@ -6,14 +6,16 @@ namespace DAL.CacheAllocation.Cosumers;
 
 public class RedisConsumer : IRedisConsumer
 {
-    const string streamName = "telemetry";
-    int expiryTime = 4000;
+    string streamName;
+    int expiryTime;
     RedisClient client;
 
-    public RedisConsumer(Ipconfig config)
+    public RedisConsumer(RedisConfig config)
     {
-        client = new RedisClient(config.RedisIp, config.RedisPort);
+        client = new RedisClient(config.Ip, config.Port);
 
+        streamName = config.StreamName;
+        expiryTime = config.ListenExpiryTime;
         client.SubscriptionReceived += (sender, data) => 
         {
             OnDataReceived?.Invoke(this, data.Message.Body);

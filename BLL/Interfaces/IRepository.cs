@@ -5,6 +5,6 @@
         Task<List<T>> GetAll();
         Task Create(T item);
         Task Update(T item);
-        Task Delete(T item);
+        Task Delete(int id);
     }
 }

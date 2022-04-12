@@ -7,13 +7,14 @@ namespace DAL.CacheAllocation.Producers
 {
     public class RedisProducer : IRedisProducer
     {
-        const string streamName = "telemetry";
+        string streamName;
 
         RedisClient client;
 
-        public RedisProducer(Ipconfig config)
+        public RedisProducer(RedisConfig config)
         {
-            client = new RedisClient(config.RedisIp, config.RedisPort);
+            client = new RedisClient(config.Ip, config.Port);
+            streamName = config.StreamName;
         }
 
         public void AddInsertCommand(Cat item)

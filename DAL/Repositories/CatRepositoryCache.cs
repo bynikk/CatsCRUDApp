@@ -17,17 +17,17 @@ namespace DAL.Repositories
             this.cache = cacheService;
         }
 
-        public override Task Delete(Cat item)
+        public override Task Delete(int id)
         {
-            cache.Delete(item.Id);
+            cache.Delete(id);
 
-            return base.Delete(item);
+            return base.Delete(id);
         }
 
         public override Task Update(Cat item)
         {
             int cacheKey = item.Id;
-            Cat cat = cache.Get(cacheKey);
+            Cat? cat = cache.Get(cacheKey);
 
             if (cat == null)
             {

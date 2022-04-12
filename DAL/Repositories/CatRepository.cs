@@ -1,8 +1,6 @@
-﻿
-using BLL.Entities;
+﻿using BLL.Entities;
 using BLL.Interfaces;
 using MongoDB.Driver;
-using ServiceStack.Redis;
 
 namespace DAL.Repositories
 {
@@ -20,9 +18,9 @@ namespace DAL.Repositories
             return context.Cats.InsertOneAsync(item);
         }
 
-        public virtual Task Delete(Cat item)
+        public virtual Task Delete(int id)
         {
-            return context.Cats.DeleteOneAsync(c => c.Id == item.Id);
+            return context.Cats.DeleteOneAsync(c => c.Id == id);
         }
 
         public virtual Task Update(Cat item)
